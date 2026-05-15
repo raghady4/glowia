@@ -1,0 +1,1133 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0"
+    />
+    <title>Glowia Clinic Suite</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+    <!-- ══════════════════ SHELL ══════════════════ -->
+    <div class="shell">
+      <!-- HEADER -->
+      <header class="header">
+        <div class="h-logo-ring">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="rgba(255,255,255,0.9)"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path
+              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"
+            />
+            <path d="M8 14s1.5 2 4 2 4-2 4-2" />
+            <line x1="9" y1="9" x2="9.01" y2="9" />
+            <line x1="15" y1="9" x2="15.01" y2="9" />
+          </svg>
+        </div>
+        <div class="h-titles">
+          <div class="h-main">Glowia Clinic — عيادة التغذية</div>
+          <div class="h-sub">
+            إشراف أخصائية التغذية الدكتورة صبا وليد الزعبي
+          </div>
+        </div>
+        <div class="h-right-cluster">
+          <div class="h-patient-tag" id="hPatientTag"></div>
+          <div class="h-date-badge" id="hDate"></div>
+        </div>
+      </header>
+
+      <!-- BODY AREA -->
+      <div class="body-area">
+        <!-- SIDEBAR (desktop) -->
+        <nav class="sidebar" id="desktopSidebar">
+          <div class="sidebar-brand">
+            <div class="sidebar-brand-name">GLOWIA</div>
+            <div class="sidebar-brand-clinic">عيادة التغذية</div>
+          </div>
+
+          <div class="nav-group-label">الرئيسية</div>
+
+          <div
+            class="nav-item active"
+            data-page="dashboard"
+            onclick="navTo('dashboard', this)"
+          >
+            <span class="ni-icon"
+              ><svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <rect x="3" y="3" width="7" height="7" rx="1" />
+                <rect x="14" y="3" width="7" height="7" rx="1" />
+                <rect x="3" y="14" width="7" height="7" rx="1" />
+                <rect x="14" y="14" width="7" height="7" rx="1" /></svg
+            ></span>
+            <span>لوحة التحكم</span>
+            <span class="nav-count" id="navCount">0</span>
+          </div>
+
+          <div
+            class="nav-item"
+            data-page="patient"
+            onclick="navTo('patient', this)"
+          >
+            <span class="ni-icon"
+              ><svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" /></svg
+            ></span>
+            <span>بيانات المريض</span>
+          </div>
+
+          <div
+            class="nav-item"
+            data-page="nutrition"
+            onclick="navTo('nutrition', this)"
+          >
+            <span class="ni-icon"
+              ><svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M3 11l19-9-9 19-2-8-8-2z" /></svg
+            ></span>
+            <span>البرنامج الغذائي</span>
+        </nav>
+
+        <!-- MAIN CONTENT -->
+        <main class="main" id="mainArea">
+          <!-- ══ DASHBOARD PAGE ══ -->
+          <div class="page active" id="page-dashboard">
+            <div class="pg-head">
+              <div class="pg-head-text">
+                <div class="pg-title">
+                  لوحة <span class="accent">التحكم</span>
+                </div>
+                <div class="pg-subtitle">عرض وإدارة جميع المرضى المسجلين</div>
+              </div>
+              <div class="pg-actions">
+                <button
+                  class="btn btn-primary"
+                  onclick="
+                    doNewPatient();
+                    navTo(
+                      'patient',
+                      document.querySelector('[data-page=patient]'),
+                    );
+                  "
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="16" />
+                    <line x1="8" y1="12" x2="16" y2="12" />
+                  </svg>
+                  إضافة مريض جديد
+                </button>
+              </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="stats-grid">
+              <div class="stat-card">
+                <div class="stat-icon-wrap si-mauve">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                  </svg>
+                </div>
+                <div class="stat-val" id="stTotal">0</div>
+                <div class="stat-lbl">إجمالي المرضى</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-icon-wrap si-rose">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                    <line x1="16" y1="2" x2="16" y2="6" />
+                    <line x1="8" y1="2" x2="8" y2="6" />
+                    <line x1="3" y1="10" x2="21" y2="10" />
+                  </svg>
+                </div>
+                <div class="stat-val" id="stToday">0</div>
+                <div class="stat-lbl">مضافون اليوم</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-icon-wrap si-green">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
+                  </svg>
+                </div>
+                <div class="stat-val" id="stGoal">0</div>
+                <div class="stat-lbl">لديهم هدف وزن</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-icon-wrap si-blue">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path
+                      d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                    />
+                    <polyline points="14 2 14 8 20 8" />
+                    <line x1="16" y1="13" x2="8" y2="13" />
+                    <line x1="16" y1="17" x2="8" y2="17" />
+                    <polyline points="10 9 9 9 8 9" />
+                  </svg>
+                </div>
+                <div class="stat-val" id="stPlans">0</div>
+                <div class="stat-lbl">لديهم برنامج غذائي</div>
+              </div>
+            </div>
+
+            <!-- Table card -->
+            <div class="card">
+              <div class="card-header">
+                <span class="ch-icon"
+                  ><svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <line x1="8" y1="6" x2="21" y2="6" />
+                    <line x1="8" y1="12" x2="21" y2="12" />
+                    <line x1="8" y1="18" x2="21" y2="18" />
+                    <line x1="3" y1="6" x2="3.01" y2="6" />
+                    <line x1="3" y1="12" x2="3.01" y2="12" />
+                    <line x1="3" y1="18" x2="3.01" y2="18" /></svg
+                ></span>
+                <h3>قائمة المرضى</h3>
+                <div style="margin-right: auto">
+                  <div class="search-wrap">
+                    <span class="search-icon"
+                      ><svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      >
+                        <circle cx="11" cy="11" r="8" />
+                        <line x1="21" y1="21" x2="16.65" y2="16.65" /></svg
+                    ></span>
+                    <input
+                      type="text"
+                      id="searchQ"
+                      placeholder="البحث باسم المريض..."
+                      oninput="renderTable()"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div style="padding: 0">
+                <div class="tbl-wrap">
+                  <table class="tbl">
+                    <thead>
+                      <tr>
+                        <th>#</th>
+                        <th>المريض</th>
+                        <th>BMI</th>
+                        <th>الوزن</th>
+                        <th>الطول</th>
+                        <th>العمر</th>
+                        <th>تاريخ</th>
+                        <th>إجراءات</th>
+                      </tr>
+                    </thead>
+                    <tbody id="patientsBody"></tbody>
+                  </table>
+                  <div id="dashEmpty" class="empty-state" style="display: none">
+                    <div class="empty-icon">
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      >
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                      </svg>
+                    </div>
+                    <p>لا يوجد مرضى مسجلون</p>
+                    <small>اضغط "إضافة مريض جديد" للبدء</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ══ PATIENT FORM PAGE ══ -->
+          <div class="page" id="page-patient">
+            <div class="pg-head">
+              <div class="pg-head-text">
+                <div class="pg-title" id="fmTitle">
+                  إضافة <span class="accent">مريض جديد</span>
+                </div>
+                <div class="pg-subtitle" id="fmSub">
+                  أدخلي بيانات المريض بالكامل
+                </div>
+              </div>
+              <div class="pg-actions">
+                <button
+                  class="btn btn-ghost"
+                  onclick="
+                    navTo(
+                      'dashboard',
+                      document.querySelector('[data-page=dashboard]'),
+                    )
+                  "
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <line x1="19" y1="12" x2="5" y2="12" />
+                    <polyline points="12 19 5 12 12 5" />
+                  </svg>
+                  العودة
+                </button>
+                <button class="btn btn-primary" onclick="savePatient()">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path
+                      d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"
+                    />
+                    <polyline points="17 21 17 13 7 13 7 21" />
+                    <polyline points="7 3 7 8 15 8" />
+                  </svg>
+                  حفظ البيانات
+                </button>
+              </div>
+            </div>
+
+            <!-- Name hero -->
+            <div class="pt-hero">
+              <label>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+                اسم المريضة / المريض
+              </label>
+              <input
+                type="text"
+                id="fName"
+                placeholder="أدخلي الاسم الكامل هنا..."
+              />
+            </div>
+
+            <!-- Body Metrics -->
+            <div class="card">
+              <div class="card-header">
+                <span class="ch-icon"
+                  ><svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <line x1="18" y1="20" x2="18" y2="10" />
+                    <line x1="12" y1="20" x2="12" y2="4" />
+                    <line x1="6" y1="20" x2="6" y2="14" /></svg
+                ></span>
+                <h3>المؤشرات الجسدية</h3>
+              </div>
+              <div class="card-body">
+                <div class="g4">
+                  <div class="field">
+                    <label>الوزن <span class="unit">KG</span></label
+                    ><input type="number" id="fWeight" placeholder="0.0" />
+                  </div>
+                  <div class="field">
+                    <label>الطول <span class="unit">CM</span></label
+                    ><input type="number" id="fHeight" placeholder="0" />
+                  </div>
+                  <div class="field">
+                    <label>العمر</label
+                    ><input type="number" id="fAge" placeholder="0" />
+                  </div>
+                  <div class="field">
+                    <label>العمر البيولوجي</label
+                    ><input type="number" id="fBioAge" placeholder="0" />
+                  </div>
+                </div>
+                <div class="divider"></div>
+                <div class="g4">
+                  <div class="field">
+                    <label>BMI</label
+                    ><input type="number" id="fBMI" placeholder="0.0" />
+                  </div>
+                  <div class="field c2">
+                    <label>ملاحظة BMI</label
+                    ><input
+                      type="text"
+                      id="fBMINote"
+                      placeholder="تصنيف / ملاحظة..."
+                    />
+                  </div>
+                  <div class="field">
+                    <label>دهون <span class="unit">KG</span></label
+                    ><input type="number" id="fFat" placeholder="0.0" />
+                  </div>
+                </div>
+                <div class="divider"></div>
+                <div class="g4">
+                  <div class="field">
+                    <label
+                      >الوزن المراد الوصول له
+                      <span class="unit">KG</span></label
+                    ><input
+                      type="number"
+                      id="fTargetWeight"
+                      placeholder="0.0"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Muscles -->
+            <div class="card">
+              <div class="card-header">
+                <span class="ch-icon"
+                  ><svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M18 8h1a4 4 0 0 1 0 8h-1" />
+                    <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z" />
+                    <line x1="6" y1="1" x2="6" y2="4" />
+                    <line x1="10" y1="1" x2="10" y2="4" />
+                    <line x1="14" y1="1" x2="14" y2="4" /></svg
+                ></span>
+                <h3>العضلات — Muscles</h3>
+              </div>
+              <div class="card-body">
+                <div class="g2" style="margin-bottom: 14px">
+                  <div class="field">
+                    <label>عضلات إجمالي <span class="unit">KG</span></label
+                    ><input type="number" id="fMuscles" placeholder="0.0" />
+                  </div>
+                </div>
+                <div class="mgroup">
+                  <div class="mgroup-title">
+                    <span class="mt-icon"
+                      ><svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      >
+                        <line x1="12" y1="2" x2="12" y2="22" />
+                        <path
+                          d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"
+                        /></svg></span
+                    >عضلات الساقين
+                  </div>
+                  <div class="g3 keep3">
+                    <div class="field">
+                      <label>اليمين <span class="unit">KG</span></label
+                      ><input type="number" id="fLegR" placeholder="0.0" />
+                    </div>
+                    <div class="field">
+                      <label>اليسار <span class="unit">KG</span></label
+                      ><input type="number" id="fLegL" placeholder="0.0" />
+                    </div>
+                    <div class="field">
+                      <label>الهدف <span class="unit">KG</span></label
+                      ><input type="number" id="fLegT" placeholder="0.0" />
+                    </div>
+                  </div>
+                </div>
+                <div class="mgroup">
+                  <div class="mgroup-title">
+                    <span class="mt-icon"
+                      ><svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      >
+                        <path
+                          d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+                        /></svg></span
+                    >عضلات الذراعين
+                  </div>
+                  <div class="g3 keep3">
+                    <div class="field">
+                      <label>اليمين <span class="unit">KG</span></label
+                      ><input type="number" id="fArmR" placeholder="0.0" />
+                    </div>
+                    <div class="field">
+                      <label>اليسار <span class="unit">KG</span></label
+                      ><input type="number" id="fArmL" placeholder="0.0" />
+                    </div>
+                    <div class="field">
+                      <label>الهدف <span class="unit">KG</span></label
+                      ><input type="number" id="fArmT" placeholder="0.0" />
+                    </div>
+                  </div>
+                </div>
+                <div class="mgroup">
+                  <div class="mgroup-title">
+                    <span class="mt-icon"
+                      ><svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      >
+                        <rect x="3" y="8" width="18" height="4" rx="1" />
+                        <line x1="12" y1="8" x2="12" y2="21" />
+                        <path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7" />
+                        <path
+                          d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"
+                        /></svg></span
+                    >عضلات الجذع
+                  </div>
+                  <div class="g2 keep2">
+                    <div class="field">
+                      <label>الحالية <span class="unit">KG</span></label
+                      ><input type="number" id="fTrunk" placeholder="0.0" />
+                    </div>
+                    <div class="field">
+                      <label>الهدف <span class="unit">KG</span></label
+                      ><input type="number" id="fTrunkT" placeholder="0.0" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Measurements -->
+            <div class="card">
+              <div class="card-header">
+                <span class="ch-icon"
+                  ><svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M2 12h20" />
+                    <path d="M2 12l3-3 3 3 3-3 3 3 3-3 3 3" /></svg
+                ></span>
+                <h3>القياسات — Measurements</h3>
+              </div>
+              <div class="card-body">
+                <div class="g5">
+                  <div class="field">
+                    <label>الصدر <span class="unit">CM</span></label
+                    ><input type="number" id="fChest" placeholder="0.0" />
+                  </div>
+                  <div class="field">
+                    <label>الخصر <span class="unit">CM</span></label
+                    ><input type="number" id="fWaist" placeholder="0.0" />
+                  </div>
+                  <div class="field">
+                    <label>الورك <span class="unit">CM</span></label
+                    ><input type="number" id="fHip" placeholder="0.0" />
+                  </div>
+                  <div class="field">
+                    <label>الزند <span class="unit">CM</span></label
+                    ><input type="number" id="fWrist" placeholder="0.0" />
+                  </div>
+                  <div class="field">
+                    <label>الفخذ <span class="unit">CM</span></label
+                    ><input type="number" id="fThigh" placeholder="0.0" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Notes -->
+            <div class="card">
+              <div class="card-header">
+                <span class="ch-icon"
+                  ><svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path
+                      d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
+                    />
+                    <path
+                      d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"
+                    /></svg
+                ></span>
+                <h3>ملاحظات الدكتورة</h3>
+              </div>
+              <div class="card-body">
+                <div class="field">
+                  <textarea
+                    id="fNotes"
+                    placeholder="الملاحظات الطبية والتغذوية..."
+                    style="min-height: 110px"
+                  ></textarea>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button
+                class="btn btn-ghost"
+                onclick="
+                  navTo(
+                    'dashboard',
+                    document.querySelector('[data-page=dashboard]'),
+                  )
+                "
+              >
+                إلغاء
+              </button>
+              <button class="btn btn-outline" onclick="gotoNutrition()">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M3 11l19-9-9 19-2-8-8-2z" />
+                </svg>
+                البرنامج الغذائي
+              </button>
+              <button class="btn btn-primary" onclick="savePatient()">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path
+                    d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"
+                  />
+                  <polyline points="17 21 17 13 7 13 7 21" />
+                  <polyline points="7 3 7 8 15 8" />
+                </svg>
+                حفظ البيانات
+              </button>
+            </div>
+          </div>
+
+          <!-- ══ NUTRITION PAGE ══ -->
+          <div class="page" id="page-nutrition">
+            <div class="pg-head">
+              <div class="pg-head-text">
+                <div class="pg-title">
+                  البرنامج <span class="accent">الغذائي</span>
+                </div>
+                <div class="pg-subtitle">جدول أسبوعي بست وجبات يومياً</div>
+              </div>
+              <div class="pg-actions">
+                <button class="btn btn-ghost btn-sm" onclick="clearPlan()">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <polyline points="3 6 5 6 21 6" />
+                    <path
+                      d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+                    />
+                  </svg>
+                  مسح الجدول
+                </button>
+                <button class="btn btn-outline btn-sm" onclick="savePlan()">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path
+                      d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"
+                    />
+                    <polyline points="17 21 17 13 7 13 7 21" />
+                  </svg>
+                  حفظ
+                </button>
+                <button class="btn btn-primary btn-sm" onclick="exportPDF()">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path
+                      d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                    />
+                    <polyline points="14 2 14 8 20 8" />
+                    <line x1="16" y1="13" x2="8" y2="13" />
+                    <line x1="16" y1="17" x2="8" y2="17" />
+                  </svg>
+                  تصدير PDF
+                </button>
+              </div>
+            </div>
+
+            <!-- Patient bar -->
+            <div class="np-bar">
+              <div>
+                <div class="np-name" id="npName">لم يتم اختيار مريض</div>
+                <div class="np-sub">
+                  اختر مريضًا من لوحة التحكم أو أدخل الاسم يدويًا
+                </div>
+              </div>
+              <div class="field" style="min-width: 180px; margin: 0">
+                <input
+                  type="text"
+                  id="npNameIn"
+                  placeholder="اسم المريض..."
+                  style="border-radius: var(--r-pill); padding: 9px 14px"
+                />
+              </div>
+              <div class="field" style="min-width: 140px; margin: 0">
+                <input
+                  type="text"
+                  id="npDate"
+                  placeholder="التاريخ..."
+                  style="border-radius: var(--r-pill); padding: 9px 14px"
+                />
+              </div>
+            </div>
+
+            <!-- 6-meal 7-day table -->
+            <div class="card">
+              <div class="card-header">
+                <span class="ch-icon"
+                  ><svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                    <line x1="16" y1="2" x2="16" y2="6" />
+                    <line x1="8" y1="2" x2="8" y2="6" />
+                    <line x1="3" y1="10" x2="21" y2="10" /></svg
+                ></span>
+                <h3>الجدول الأسبوعي — فطور، سناك، غداء، سناك، عشاء، سناك</h3>
+              </div>
+              <div class="card-body" style="padding: 14px">
+                <div class="plan-table-outer">
+                  <table class="plan-table" id="planTable">
+                    <thead>
+                      <tr>
+                        <th style="width: 72px">الوجبة</th>
+                        <th>السبت</th>
+                        <th>الأحد</th>
+                        <th>الاثنين</th>
+                        <th>الثلاثاء</th>
+                        <th>الأربعاء</th>
+                        <th>الخميس</th>
+                        <th>الجمعة</th>
+                      </tr>
+                    </thead>
+                    <tbody id="planBody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- Instructions -->
+            <div class="g2">
+              <div class="card">
+                <div class="card-header">
+                  <span class="ch-icon"
+                    ><svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <circle cx="12" cy="12" r="10" />
+                      <line x1="12" y1="8" x2="12" y2="12" />
+                      <line x1="12" y1="16" x2="12.01" y2="16" /></svg
+                  ></span>
+                  <h3>التعليمات العامة</h3>
+                </div>
+                <div class="card-body">
+                  <textarea
+                    class="inst-ta"
+                    id="npInst"
+                    placeholder="اكتبي التعليمات العامة للمريض..."
+                  ></textarea>
+                </div>
+              </div>
+              <div class="card">
+                <div class="card-header">
+                  <span class="ch-icon"
+                    ><svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path d="M3 3l18 18" />
+                      <path d="M10.5 10.677a2 2 0 0 0 2.823 2.823" />
+                      <path
+                        d="M7.362 7.561C5.68 8.74 4.279 10.42 3 12c1.889 2.991 5.282 6 9 6 1.55 0 3.043-.523 4.395-1.35"
+                      />
+                      <path
+                        d="M19.08 13.37A13.444 13.444 0 0 0 21 12c-1.889-2.991-5.282-6-9-6-.503 0-1 .05-1.488.144"
+                      /></svg
+                  ></span>
+                  <h3>الأطعمة المسموح بها / الممنوعة</h3>
+                </div>
+                <div class="card-body">
+                  <div class="inst-label">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    الأطعمة المسموح بها
+                  </div>
+                  <textarea
+                    class="inst-ta"
+                    id="npAllowed"
+                    placeholder="قائمة الأطعمة المسموح بها..."
+                    style="min-height: 70px; margin-bottom: 14px"
+                  ></textarea>
+                  <div class="inst-label" style="color: var(--rose-dark)">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="var(--rose-dark)"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <circle cx="12" cy="12" r="10" />
+                      <line x1="15" y1="9" x2="9" y2="15" />
+                      <line x1="9" y1="9" x2="15" y2="15" />
+                    </svg>
+                    الأطعمة الممنوعة
+                  </div>
+                  <textarea
+                    class="inst-ta"
+                    id="npForbidden"
+                    placeholder="قائمة الأطعمة الممنوعة..."
+                    style="min-height: 70px"
+                  ></textarea>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button class="btn btn-ghost" onclick="savePlan()">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path
+                    d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"
+                  />
+                  <polyline points="17 21 17 13 7 13 7 21" />
+                </svg>
+                حفظ البرنامج
+              </button>
+              <button class="btn btn-primary" onclick="exportPDF()">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path
+                    d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                  />
+                  <polyline points="14 2 14 8 20 8" />
+                </svg>
+                تصدير PDF احترافي
+              </button>
+            </div>
+          </div>
+        </main>
+      </div>
+      <!-- /body-area -->
+
+      <!-- MOBILE NAV -->
+      <nav class="mobile-nav" id="mobileNav">
+        <button
+          class="mob-nav-item active"
+          data-page="dashboard"
+          onclick="navTo('dashboard', this)"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <rect x="3" y="3" width="7" height="7" rx="1" />
+            <rect x="14" y="3" width="7" height="7" rx="1" />
+            <rect x="3" y="14" width="7" height="7" rx="1" />
+            <rect x="14" y="14" width="7" height="7" rx="1" />
+          </svg>
+          التحكم
+        </button>
+        <button
+          class="mob-nav-item"
+          data-page="patient"
+          onclick="navTo('patient', this)"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+            <circle cx="12" cy="7" r="4" />
+          </svg>
+          المريض
+        </button>
+        <button
+          class="mob-nav-item"
+          onclick="
+            doNewPatient();
+            navTo('patient', document.querySelector('[data-page=patient]'));
+          "
+          style="color: var(--mauve)"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="var(--mauve)"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="16" />
+            <line x1="8" y1="12" x2="16" y2="12" />
+          </svg>
+          جديد
+        </button>
+        <button
+          class="mob-nav-item"
+          data-page="nutrition"
+          onclick="navTo('nutrition', this)"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M3 11l19-9-9 19-2-8-8-2z" />
+          </svg>
+          الغذائي
+        </button>
+        <button
+          class="mob-nav-item"
+          onclick="exportPDF()"
+          style="font-size: 0.6rem"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path
+              d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+            />
+            <polyline points="14 2 14 8 20 8" />
+          </svg>
+          PDF
+        </button>
+      </nav>
+    </div>
+    <!-- /shell -->
+
+    <!-- TOAST -->
+    <div class="toast" id="toast"></div>
+
+    <!-- DELETE DIALOG -->
+    <div class="overlay" id="delOverlay">
+      <div class="dialog">
+        <div class="dialog-icon">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="3 6 5 6 21 6" />
+            <path
+              d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+            />
+            <line x1="10" y1="11" x2="10" y2="17" />
+            <line x1="14" y1="11" x2="14" y2="17" />
+          </svg>
+        </div>
+        <h3>تأكيد الحذف</h3>
+        <p>
+          هل أنتِ متأكدة من حذف بيانات هذا المريض؟<br />لا يمكن التراجع عن هذا
+          الإجراء.
+        </p>
+        <div class="dialog-acts">
+          <button class="btn btn-ghost" onclick="closeDialog()">إلغاء</button>
+          <button class="btn btn-danger" onclick="confirmDelete()">
+            تأكيد الحذف
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PDF TARGET (hidden) -->
+    <div id="pdfTarget"></div>
+<script src="script.js">
+  
+</script>
+  </body>
+</html>
