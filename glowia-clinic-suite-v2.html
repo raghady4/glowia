@@ -1,0 +1,3460 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0"
+    />
+    <title>Glowia Clinic Suite</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+      /* ═══════════════════════════════════════════════════════════
+   DESIGN TOKENS — extracted from Glowia Clinic brand image
+═══════════════════════════════════════════════════════════ */
+      :root {
+        /* Core palette */
+        --blush: #fde8f0;
+        --blush-deep: #f8c8dc;
+        --blush-card: #fff5f9;
+        --rose: #e8739a;
+        --rose-dark: #d4547f;
+        --mauve: #8b3a9e;
+        --mauve-deep: #6b2080;
+        --mauve-light: #c49ad8;
+        --mauve-pale: #edd9f5;
+        --white: #ffffff;
+        --ink: #2d1428;
+        --ink-soft: #503060;
+        --muted: #9878a8;
+        --border: #f0d0e8;
+        --border-soft: #fae8f4;
+
+        /* Semantic */
+        --bg: var(--blush);
+        --card-bg: var(--white);
+        --card-border: var(--border);
+        --text-head: var(--ink);
+        --text-body: var(--ink-soft);
+        --text-muted: var(--muted);
+        --accent: var(--mauve);
+        --accent2: var(--rose);
+
+        /* Geometry */
+        --r-xs: 8px;
+        --r-sm: 12px;
+        --r-md: 18px;
+        --r-lg: 24px;
+        --r-xl: 32px;
+        --r-pill: 999px;
+
+        /* Shadows */
+        --sh-xs: 0 1px 4px rgba(139, 58, 158, 0.06);
+        --sh-sm: 0 2px 12px rgba(139, 58, 158, 0.09);
+        --sh-md: 0 6px 28px rgba(139, 58, 158, 0.13);
+        --sh-lg: 0 16px 48px rgba(139, 58, 158, 0.18);
+        --sh-rose: 0 4px 18px rgba(232, 115, 154, 0.28);
+        --sh-mauve: 0 4px 18px rgba(139, 58, 158, 0.3);
+
+        /* Motion */
+        --ease: cubic-bezier(0.4, 0, 0.2, 1);
+        --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+        /* Layout */
+        --sidebar: 230px;
+        --header: 68px;
+        --mob-nav: 56px;
+      }
+
+      /* ═══════════════════════════════════════════════════════════
+   RESET
+═══════════════════════════════════════════════════════════ */
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html {
+        font-size: 15px;
+        -webkit-text-size-adjust: 100%;
+      }
+      body {
+        font-family: "Tajawal", Tahoma, sans-serif;
+        color: var(--text-body);
+        background: var(--bg);
+        direction: rtl;
+        text-align: right;
+        height: 100dvh;
+        overflow: hidden;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      /* ═══════════════════════════════════════════════════════════
+   LAYOUT SHELL
+═══════════════════════════════════════════════════════════ */
+      .shell {
+        display: flex;
+        flex-direction: column;
+        height: 100dvh;
+        overflow: hidden;
+      }
+
+      /* ═══════════════════════════════════════════════════════════
+   HEADER
+═══════════════════════════════════════════════════════════ */
+      .header {
+        height: var(--header);
+        flex-shrink: 0;
+        background: linear-gradient(
+          110deg,
+          var(--mauve-deep) 0%,
+          var(--mauve) 55%,
+          var(--rose) 100%
+        );
+        display: flex;
+        align-items: center;
+        padding: 0 24px;
+        gap: 14px;
+        box-shadow: 0 2px 20px rgba(107, 32, 128, 0.35);
+        position: relative;
+        overflow: hidden;
+        z-index: 100;
+      }
+      .header::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(
+          ellipse 60% 140% at 5% 50%,
+          rgba(255, 255, 255, 0.12) 0%,
+          transparent 55%
+        );
+        pointer-events: none;
+      }
+      .h-logo-ring {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        border: 2px solid rgba(255, 255, 255, 0.35);
+        background: rgba(255, 255, 255, 0.15);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        backdrop-filter: blur(8px);
+      }
+      .h-logo-ring svg {
+        width: 22px;
+        height: 22px;
+      }
+      .h-titles {
+        flex: 1;
+        min-width: 0;
+      }
+      .h-main {
+        font-size: 1.15rem;
+        font-weight: 800;
+        color: #fff;
+        line-height: 1.2;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .h-sub {
+        font-size: 0.72rem;
+        color: rgba(255, 255, 255, 0.75);
+        margin-top: 2px;
+      }
+      .h-right-cluster {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-shrink: 0;
+      }
+      .h-date-badge {
+        font-size: 0.71rem;
+        color: rgba(255, 255, 255, 0.85);
+        background: rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        border-radius: var(--r-pill);
+        padding: 5px 13px;
+        backdrop-filter: blur(8px);
+        white-space: nowrap;
+      }
+      .h-patient-tag {
+        font-size: 0.72rem;
+        color: rgba(255, 255, 255, 0.9);
+        background: rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: var(--r-pill);
+        padding: 5px 13px;
+        max-width: 200px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        display: none;
+      }
+      .h-patient-tag.visible {
+        display: block;
+      }
+
+      /* ═══════════════════════════════════════════════════════════
+   BODY AREA
+═══════════════════════════════════════════════════════════ */
+      .body-area {
+        display: flex;
+        flex: 1;
+        overflow: hidden;
+      }
+
+      /* ═══════════════════════════════════════════════════════════
+   DESKTOP SIDEBAR
+═══════════════════════════════════════════════════════════ */
+      .sidebar {
+        width: var(--sidebar);
+        flex-shrink: 0;
+        background: linear-gradient(
+          175deg,
+          var(--mauve-deep) 0%,
+          #7a2595 60%,
+          var(--mauve) 100%
+        );
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        box-shadow: 2px 0 20px rgba(107, 32, 128, 0.2);
+        position: relative;
+        z-index: 50;
+      }
+      .sidebar::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 100%;
+        height: 200px;
+        background: radial-gradient(
+          ellipse 120% 60% at 50% 0%,
+          rgba(255, 255, 255, 0.07) 0%,
+          transparent 70%
+        );
+        pointer-events: none;
+      }
+      .sidebar-brand {
+        padding: 20px 18px 14px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      .sidebar-brand-name {
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: rgba(255, 255, 255, 0.5);
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+      }
+      .sidebar-brand-clinic {
+        font-size: 0.92rem;
+        font-weight: 800;
+        color: rgba(255, 255, 255, 0.95);
+        margin-top: 3px;
+      }
+      .nav-group-label {
+        font-size: 0.62rem;
+        font-weight: 700;
+        color: rgba(255, 255, 255, 0.35);
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        padding: 18px 18px 6px;
+      }
+      .nav-item {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        padding: 11px 14px;
+        margin: 2px 10px;
+        border-radius: var(--r-sm);
+        cursor: pointer;
+        font-size: 0.86rem;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.62);
+        transition: all 0.2s var(--ease);
+        position: relative;
+        overflow: hidden;
+        user-select: none;
+      }
+      .nav-item:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.9);
+      }
+      .nav-item.active {
+        background: linear-gradient(
+          90deg,
+          rgba(255, 255, 255, 0.18),
+          rgba(255, 255, 255, 0.08)
+        );
+        color: #fff;
+        font-weight: 700;
+        box-shadow:
+          inset 3px 0 0 var(--rose),
+          var(--sh-xs);
+      }
+      .nav-item .ni-icon {
+        width: 18px;
+        height: 18px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .nav-item .ni-icon svg {
+        width: 16px;
+        height: 16px;
+      }
+      .nav-count {
+        margin-right: auto;
+        background: var(--rose);
+        color: #fff;
+        font-size: 0.62rem;
+        font-weight: 700;
+        border-radius: var(--r-pill);
+        padding: 2px 7px;
+        min-width: 20px;
+        text-align: center;
+      }
+      .sidebar-foot {
+        margin-top: auto;
+        padding: 16px 18px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        font-size: 0.67rem;
+        color: rgba(255, 255, 255, 0.35);
+        line-height: 1.7;
+      }
+
+      /* ═══════════════════════════════════════════════════════════
+   MAIN CONTENT AREA
+═══════════════════════════════════════════════════════════ */
+      .main {
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+        background:
+          radial-gradient(
+            ellipse 70% 50% at 0% 0%,
+            rgba(237, 217, 245, 0.6) 0%,
+            transparent 55%
+          ),
+          radial-gradient(
+            ellipse 50% 60% at 100% 100%,
+            rgba(248, 200, 220, 0.4) 0%,
+            transparent 50%
+          ),
+          var(--blush);
+        position: relative;
+      }
+
+      /* Page transitions */
+      .page {
+        display: none;
+        padding: 26px 28px 40px;
+        animation: slideUp 0.28s var(--ease) both;
+      }
+      .page.active {
+        display: block;
+      }
+      @keyframes slideUp {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* ═══════════════════════════════════════════════════════════
+   PAGE TITLE
+═══════════════════════════════════════════════════════════ */
+      .pg-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        margin-bottom: 22px;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      .pg-head-text {
+      }
+      .pg-title {
+        font-size: 1.35rem;
+        font-weight: 800;
+        color: var(--ink);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .pg-title .accent {
+        color: var(--mauve);
+      }
+      .pg-subtitle {
+        font-size: 0.75rem;
+        color: var(--muted);
+        margin-top: 3px;
+      }
+      .pg-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+
+      /* ═══════════════════════════════════════════════════════════
+   BUTTONS
+═══════════════════════════════════════════════════════════ */
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 10px 20px;
+        border-radius: var(--r-pill);
+        border: none;
+        outline: none;
+        font-family: inherit;
+        font-size: 0.84rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.22s var(--ease);
+        white-space: nowrap;
+        user-select: none;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .btn svg {
+        width: 15px;
+        height: 15px;
+        flex-shrink: 0;
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, var(--mauve), var(--rose));
+        color: #fff;
+        box-shadow: var(--sh-mauve);
+      }
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 28px rgba(139, 58, 158, 0.38);
+      }
+      .btn-primary:active {
+        transform: translateY(0);
+      }
+
+      .btn-outline {
+        background: #fff;
+        color: var(--mauve);
+        border: 1.5px solid var(--mauve-light);
+        box-shadow: var(--sh-xs);
+      }
+      .btn-outline:hover {
+        background: var(--mauve-pale);
+        border-color: var(--mauve);
+        transform: translateY(-1px);
+      }
+
+      .btn-rose {
+        background: linear-gradient(135deg, var(--rose-dark), var(--rose));
+        color: #fff;
+        box-shadow: var(--sh-rose);
+      }
+      .btn-rose:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(232, 115, 154, 0.42);
+      }
+
+      .btn-ghost {
+        background: transparent;
+        color: var(--muted);
+        padding: 9px 14px;
+        font-size: 0.8rem;
+      }
+      .btn-ghost:hover {
+        color: var(--mauve);
+        background: var(--mauve-pale);
+      }
+
+      .btn-danger {
+        background: linear-gradient(135deg, #b02020, #d94040);
+        color: #fff;
+        box-shadow: 0 4px 14px rgba(176, 32, 32, 0.28);
+      }
+      .btn-danger:hover {
+        transform: translateY(-2px);
+      }
+
+      .btn-success {
+        background: linear-gradient(135deg, #276627, #3d8f3d);
+        color: #fff;
+        box-shadow: 0 4px 14px rgba(39, 102, 39, 0.28);
+      }
+      .btn-success:hover {
+        transform: translateY(-2px);
+      }
+
+      .btn-sm {
+        padding: 7px 15px;
+        font-size: 0.78rem;
+      }
+      .btn-sm svg {
+        width: 13px;
+        height: 13px;
+      }
+      .btn-xs {
+        padding: 5px 11px;
+        font-size: 0.74rem;
+      }
+      .btn-xs svg {
+        width: 12px;
+        height: 12px;
+      }
+      .btn:active {
+        transform: translateY(0) !important;
+      }
+
+      /* Icon-only button */
+      .btn-icon {
+        width: 34px;
+        height: 34px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: var(--r-sm);
+      }
+      .btn-icon svg {
+        width: 15px;
+        height: 15px;
+      }
+
+      /* ═══════════════════════════════════════════════════════════
+   CARDS
+═══════════════════════════════════════════════════════════ */
+      .card {
+        background: var(--card-bg);
+        border-radius: var(--r-lg);
+        border: 1px solid var(--card-border);
+        box-shadow: var(--sh-sm);
+        margin-bottom: 18px;
+        overflow: hidden;
+        transition: box-shadow 0.22s;
+      }
+      .card:hover {
+        box-shadow: var(--sh-md);
+      }
+      .card-header {
+        padding: 14px 22px;
+        background: linear-gradient(
+          90deg,
+          var(--mauve-pale) 0%,
+          var(--blush-card) 100%
+        );
+        border-bottom: 1px solid var(--border-soft);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .card-header h3 {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: var(--mauve-deep);
+      }
+      .card-header .ch-icon {
+        color: var(--mauve);
+        display: flex;
+        align-items: center;
+      }
+      .card-header .ch-icon svg {
+        width: 17px;
+        height: 17px;
+      }
+      .card-body {
+        padding: 22px;
+      }
+
+      /* ═══════════════════════════════════════════════════════════
+   FORM ELEMENTS
+═══════════════════════════════════════════════════════════ */
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+      .field label {
+        font-size: 0.76rem;
+        font-weight: 700;
+        color: var(--mauve-deep);
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+      .field .unit {
+        font-weight: 400;
+        color: var(--muted);
+        font-size: 0.68rem;
+        background: var(--mauve-pale);
+        padding: 1px 6px;
+        border-radius: var(--r-pill);
+      }
+      .field input[type="number"],
+      .field input[type="text"],
+      .field textarea,
+      .field select {
+        padding: 10px 13px;
+        border-radius: var(--r-sm);
+        border: 1.5px solid var(--border);
+        background: rgba(255, 255, 255, 0.9);
+        font-family: inherit;
+        font-size: 0.87rem;
+        color: var(--ink);
+        outline: none;
+        transition:
+          border-color 0.2s,
+          box-shadow 0.2s;
+        direction: rtl;
+        text-align: right;
+        -moz-appearance: textfield;
+        -webkit-appearance: none;
+        width: 100%;
+      }
+      .field input::-webkit-outer-spin-button,
+      .field input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+      }
+      .field input:focus,
+      .field textarea:focus {
+        border-color: var(--mauve);
+        background: #fff;
+        box-shadow: 0 0 0 3px rgba(139, 58, 158, 0.1);
+      }
+      .field input::placeholder,
+      .field textarea::placeholder {
+        color: #d4b8e0;
+        font-weight: 300;
+      }
+      .field textarea {
+        resize: vertical;
+        min-height: 90px;
+        line-height: 1.65;
+      }
+
+      /* ═══════════════════════════════════════════════════════════
+   GRIDS
+═══════════════════════════════════════════════════════════ */
+      .g2 {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+      }
+      .g3 {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+      }
+      .g4 {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 15px;
+      }
+      .g5 {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 15px;
+      }
+      .c2 {
+        grid-column: span 2;
+      }
+      .c3 {
+        grid-column: span 3;
+      }
+      .c4 {
+        grid-column: span 4;
+      }
+
+      /* ═══════════════════════════════════════════════════════════
+   DIVIDER
+═══════════════════════════════════════════════════════════ */
+      .divider {
+        height: 1px;
+        background: linear-gradient(
+          90deg,
+          var(--border),
+          var(--blush-deep),
+          transparent
+        );
+        margin: 18px 0;
+        border-radius: 2px;
+      }
+
+      /* ═══════════════════════════════════════════════════════════
+   MUSCLE GROUP
+═══════════════════════════════════════════════════════════ */
+      .mgroup {
+        background: linear-gradient(
+          135deg,
+          rgba(237, 217, 245, 0.3),
+          rgba(253, 232, 240, 0.3)
+        );
+        border-radius: var(--r-sm);
+        padding: 16px;
+        border: 1px solid var(--border-soft);
+        margin-bottom: 12px;
+      }
+      .mgroup-title {
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: var(--mauve);
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .mgroup-title .mt-icon {
+        color: var(--mauve-light);
+        display: flex;
+      }
+      .mgroup-title .mt-icon svg {
+        width: 14px;
+        height: 14px;
+      }
+      .mgroup-title::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: linear-gradient(90deg, var(--border), transparent);
+      }
+
+      /* ═══════════════════════════════════════════════════════════
+   STATS CARDS
+═══════════════════════════════════════════════════════════ */
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 14px;
+        margin-bottom: 22px;
+      }
+      .stat-card {
+        background: var(--white);
+        border-radius: var(--r-md);
+        padding: 18px;
+        border: 1px solid var(--border);
+        box-shadow: var(--sh-xs);
+        transition:
+          transform 0.22s,
+          box-shadow 0.22s;
+        cursor: default;
+      }
+      .stat-card:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--sh-md);
+      }
+      .stat-icon-wrap {
+        width: 40px;
+        height: 40px;
+        border-radius: var(--r-sm);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 12px;
+      }
+      .stat-icon-wrap svg {
+        width: 18px;
+        height: 18px;
+      }
+      .si-mauve {
+        background: var(--mauve-pale);
+        color: var(--mauve);
+      }
+      .si-rose {
+        background: #fde8f0;
+        color: var(--rose-dark);
+      }
+      .si-green {
+        background: #e6f4e6;
+        color: #2e7d32;
+      }
+      .si-blue {
+        background: #e3edf8;
+        color: #1565c0;
+      }
+      .stat-val {
+        font-size: 1.7rem;
+        font-weight: 800;
+        color: var(--ink);
+        line-height: 1;
+      }
+      .stat-lbl {
+        font-size: 0.72rem;
+        color: var(--muted);
+        font-weight: 500;
+        margin-top: 4px;
+      }
+
+      /* ═══════════════════════════════════════════════════════════
+   SEARCH
+═══════════════════════════════════════════════════════════ */
+      .search-wrap {
+        position: relative;
+        width: 100%;
+        max-width: 360px;
+      }
+      .search-wrap input {
+        width: 100%;
+        padding: 10px 16px 10px 40px;
+        border-radius: var(--r-pill);
+        border: 1.5px solid var(--border);
+        background: #fff;
+        font-family: inherit;
+        font-size: 0.86rem;
+        color: var(--ink);
+        outline: none;
+        box-shadow: var(--sh-xs);
+        transition: all 0.2s;
+        direction: rtl;
+      }
+      .search-wrap input:focus {
+        border-color: var(--mauve);
+        box-shadow: 0 0 0 3px rgba(139, 58, 158, 0.1);
+      }
+      .search-icon {
+        position: absolute;
+        left: 13px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--muted);
+        pointer-events: none;
+        display: flex;
+        align-items: center;
+      }
+      .search-icon svg {
+        width: 15px;
+        height: 15px;
+      }
+
+      /* ═══════════════════════════════════════════════════════════
+   PATIENTS TABLE
+═══════════════════════════════════════════════════════════ */
+      .tbl-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      .tbl {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 600px;
+      }
+      .tbl thead tr {
+        background: linear-gradient(
+          90deg,
+          var(--mauve-pale),
+          var(--blush-card)
+        );
+      }
+      .tbl th {
+        padding: 12px 16px;
+        font-size: 0.76rem;
+        font-weight: 700;
+        color: var(--mauve-deep);
+        text-align: right;
+        border-bottom: 2px solid var(--border);
+        white-space: nowrap;
+      }
+      .tbl td {
+        padding: 12px 16px;
+        font-size: 0.83rem;
+        color: var(--text-body);
+        border-bottom: 1px solid var(--border-soft);
+        vertical-align: middle;
+      }
+      .tbl tbody tr {
+        transition: background 0.15s;
+      }
+      .tbl tbody tr:hover {
+        background: rgba(237, 217, 245, 0.3);
+      }
+      .tbl tbody tr:last-child td {
+        border-bottom: none;
+      }
+
+      /* Patient avatar */
+      .av {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--mauve-light), var(--rose));
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.8rem;
+        color: #fff;
+        flex-shrink: 0;
+        margin-left: 10px;
+        box-shadow: 0 2px 8px rgba(139, 58, 158, 0.22);
+      }
+      .pt-name-cell {
+        display: flex;
+        align-items: center;
+      }
+      .pt-sub {
+        font-size: 0.7rem;
+        color: var(--mauve);
+        margin-top: 1px;
+      }
+
+      /* BMI chip */
+      .chip {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: var(--r-pill);
+        font-size: 0.72rem;
+        font-weight: 600;
+      }
+      .chip-n {
+        background: #e8f5e9;
+        color: #2e7d32;
+      }
+      .chip-o {
+        background: #fff3e0;
+        color: #e65100;
+      }
+      .chip-ob {
+        background: #fde8f0;
+        color: #b02050;
+      }
+      .chip-u {
+        background: #e3f2fd;
+        color: #1565c0;
+      }
+      .chip-na {
+        background: #f5f0f8;
+        color: var(--muted);
+      }
+      .date-chip {
+        font-size: 0.7rem;
+        color: var(--muted);
+        background: var(--blush-card);
+        border-radius: 6px;
+        padding: 2px 8px;
+      }
+
+      /* Action cell */
+      .act-cell {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+      }
+
+      /* ═══════════════════════════════════════════════════════════
+   EMPTY STATE
+═══════════════════════════════════════════════════════════ */
+      .empty-state {
+        padding: 60px 20px;
+        text-align: center;
+        color: var(--muted);
+      }
+      .empty-icon {
+        width: 56px;
+        height: 56px;
+        margin: 0 auto 14px;
+        opacity: 0.35;
+        color: var(--mauve);
+      }
+      .empty-icon svg {
+        width: 100%;
+        height: 100%;
+      }
+      .empty-state p {
+        font-size: 0.9rem;
+        margin-bottom: 4px;
+      }
+      .empty-state small {
+        font-size: 0.76rem;
+        opacity: 0.7;
+      }
+
+      /* ═══════════════════════════════════════════════════════════
+   PATIENT HERO (form page name bar)
+═══════════════════════════════════════════════════════════ */
+      .pt-hero {
+        background: linear-gradient(
+          125deg,
+          var(--mauve-deep) 0%,
+          var(--mauve) 55%,
+          var(--rose) 100%
+        );
+        border-radius: var(--r-xl);
+        padding: 24px 28px;
+        margin-bottom: 18px;
+        position: relative;
+        overflow: hidden;
+        box-shadow: var(--sh-lg);
+      }
+      .pt-hero::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(
+          circle at 85% 50%,
+          rgba(255, 255, 255, 0.09) 0%,
+          transparent 55%
+        );
+        pointer-events: none;
+      }
+      .pt-hero label {
+        display: block;
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.72);
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+      }
+      .pt-hero label svg {
+        width: 14px;
+        height: 14px;
+      }
+      .pt-hero input {
+        width: 100%;
+        background: rgba(255, 255, 255, 0.16);
+        border: 1.5px solid rgba(255, 255, 255, 0.3);
+        border-radius: var(--r-sm);
+        padding: 12px 15px;
+        font-family: inherit;
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: #fff;
+        outline: none;
+        transition: all 0.2s;
+        direction: rtl;
+      }
+      .pt-hero input::placeholder {
+        color: rgba(255, 255, 255, 0.4);
+        font-weight: 400;
+      }
+      .pt-hero input:focus {
+        background: rgba(255, 255, 255, 0.24);
+        border-color: rgba(255, 255, 255, 0.55);
+        box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.1);
+      }
+
+      /* Form actions */
+      .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        padding: 18px 0 4px;
+        flex-wrap: wrap;
+      }
+
+      /* ═══════════════════════════════════════════════════════════
+   NUTRITION MODULE
+═══════════════════════════════════════════════════════════ */
+      .np-bar {
+        background: linear-gradient(
+          90deg,
+          var(--mauve-pale),
+          var(--blush-card)
+        );
+        border-radius: var(--r-md);
+        padding: 14px 20px;
+        margin-bottom: 18px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        border: 1px solid var(--border);
+        flex-wrap: wrap;
+      }
+      .np-name {
+        font-weight: 700;
+        font-size: 0.95rem;
+        color: var(--mauve-deep);
+        flex: 1;
+        min-width: 140px;
+      }
+      .np-sub {
+        font-size: 0.72rem;
+        color: var(--muted);
+      }
+      .np-bar .field {
+        margin: 0;
+        flex: 1;
+        min-width: 160px;
+      }
+      .np-bar input {
+        border-radius: var(--r-pill);
+      }
+
+      /* Plan table */
+      .plan-table-outer {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      .plan-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 820px; /* forces scroll on small screens */
+      }
+      .plan-table th {
+        padding: 10px 9px;
+        font-size: 0.74rem;
+        font-weight: 700;
+        color: var(--mauve-deep);
+        background: linear-gradient(
+          90deg,
+          var(--mauve-pale),
+          var(--blush-card)
+        );
+        border: 1px solid var(--border);
+        text-align: center;
+        white-space: nowrap;
+      }
+      .plan-table td {
+        border: 1px solid var(--border-soft);
+        padding: 3px 4px;
+        vertical-align: top;
+      }
+      .plan-table .row-lbl {
+        background: linear-gradient(
+          180deg,
+          var(--mauve-pale),
+          var(--blush-card)
+        );
+        font-size: 0.74rem;
+        font-weight: 700;
+        color: var(--mauve-deep);
+        text-align: center;
+        padding: 9px 6px;
+        width: 72px;
+        white-space: nowrap;
+      }
+      .plan-table .meal-snack .row-lbl {
+        color: var(--rose-dark);
+        background: linear-gradient(180deg, #fde8f0, #fff5f9);
+      }
+      .plan-table textarea {
+        width: 100%;
+        min-height: 56px;
+        border: none;
+        background: transparent;
+        font-family: inherit;
+        font-size: 0.76rem;
+        color: var(--ink);
+        resize: none;
+        outline: none;
+        direction: rtl;
+        text-align: right;
+        padding: 6px;
+        line-height: 1.5;
+        -webkit-appearance: none;
+      }
+      .plan-table textarea:focus {
+        background: rgba(237, 217, 245, 0.25);
+      }
+      .plan-table .meal-snack td:not(.row-lbl) {
+        background: rgba(253, 232, 240, 0.15);
+      }
+
+      /* Instruction textareas */
+      .inst-ta {
+        width: 100%;
+        padding: 11px 13px;
+        border-radius: var(--r-sm);
+        border: 1.5px solid var(--border);
+        background: rgba(255, 255, 255, 0.9);
+        font-family: inherit;
+        font-size: 0.85rem;
+        color: var(--ink);
+        outline: none;
+        resize: vertical;
+        min-height: 80px;
+        transition:
+          border-color 0.2s,
+          box-shadow 0.2s;
+        direction: rtl;
+      }
+      .inst-ta:focus {
+        border-color: var(--mauve);
+        box-shadow: 0 0 0 3px rgba(139, 58, 158, 0.1);
+      }
+      .inst-label {
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: var(--mauve-deep);
+        margin-bottom: 7px;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+      }
+      .inst-label svg {
+        width: 14px;
+        height: 14px;
+        color: var(--mauve);
+      }
+
+      /* ═══════════════════════════════════════════════════════════
+   TOAST
+═══════════════════════════════════════════════════════════ */
+      .toast {
+        position: fixed;
+        bottom: 24px;
+        left: 50%;
+        transform: translateX(-50%) translateY(120px);
+        background: linear-gradient(135deg, var(--mauve-deep), var(--rose));
+        color: #fff;
+        padding: 12px 24px;
+        border-radius: var(--r-pill);
+        font-weight: 600;
+        font-size: 0.86rem;
+        box-shadow: 0 8px 30px rgba(107, 32, 128, 0.38);
+        transition: transform 0.36s var(--spring);
+        z-index: 9999;
+        white-space: nowrap;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .toast.show {
+        transform: translateX(-50%) translateY(0);
+      }
+      .toast svg {
+        width: 15px;
+        height: 15px;
+      }
+
+      /* ═══════════════════════════════════════════════════════════
+   OVERLAY / DIALOG
+═══════════════════════════════════════════════════════════ */
+      .overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(45, 20, 40, 0.5);
+        backdrop-filter: blur(6px);
+        z-index: 8000;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+      .overlay.open {
+        display: flex;
+      }
+      .dialog {
+        background: #fff;
+        border-radius: var(--r-xl);
+        padding: 32px 28px;
+        max-width: 400px;
+        width: 100%;
+        box-shadow: var(--sh-lg);
+        text-align: center;
+        animation: pop 0.28s var(--spring);
+      }
+      @keyframes pop {
+        from {
+          transform: scale(0.85);
+          opacity: 0;
+        }
+        to {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+      .dialog-icon {
+        color: var(--rose);
+        display: flex;
+        justify-content: center;
+        margin-bottom: 12px;
+      }
+      .dialog-icon svg {
+        width: 48px;
+        height: 48px;
+      }
+      .dialog h3 {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: var(--ink);
+        margin-bottom: 8px;
+      }
+      .dialog p {
+        font-size: 0.85rem;
+        color: var(--muted);
+        margin-bottom: 22px;
+        line-height: 1.65;
+      }
+      .dialog-acts {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+      }
+
+      /* ═══════════════════════════════════════════════════════════
+   MOBILE BOTTOM NAV
+═══════════════════════════════════════════════════════════ */
+      .mobile-nav {
+        display: none;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: var(--mob-nav);
+        background: #fff;
+        border-top: 1px solid var(--border);
+        box-shadow: 0 -4px 20px rgba(139, 58, 158, 0.1);
+        z-index: 200;
+        align-items: stretch;
+      }
+      .mob-nav-item {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 3px;
+        cursor: pointer;
+        font-size: 0.62rem;
+        font-weight: 600;
+        color: var(--muted);
+        transition: all 0.2s;
+        padding: 6px 4px;
+        border: none;
+        background: none;
+        font-family: inherit;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .mob-nav-item svg {
+        width: 20px;
+        height: 20px;
+      }
+      .mob-nav-item.active {
+        color: var(--mauve);
+      }
+      .mob-nav-item.active svg {
+        color: var(--mauve);
+      }
+
+      /* ═══════════════════════════════════════════════════════════
+   PDF STYLES (hidden div rendered to PDF)
+═══════════════════════════════════════════════════════════ */
+      #pdfTarget {
+        display: none;
+      }
+      .pdf-wrap {
+        direction: rtl;
+        text-align: right;
+        font-family: "Tajawal", Tahoma, sans-serif;
+        background: #fff;
+        font-size: 11px;
+      }
+      .pdf-hdr {
+        background: linear-gradient(110deg, #6b2080, #8b3a9e, #e8739a);
+        padding: 20px 24px;
+      }
+      .pdf-hdr-inner {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
+      }
+      .pdf-clinic-name {
+        font-size: 1.2rem;
+        font-weight: 900;
+        color: #fff;
+        line-height: 1.2;
+      }
+      .pdf-clinic-sub {
+        font-size: 0.7rem;
+        color: rgba(255, 255, 255, 0.8);
+        margin-top: 2px;
+      }
+      .pdf-cred {
+        font-size: 0.64rem;
+        color: rgba(255, 255, 255, 0.7);
+        margin-top: 5px;
+        line-height: 1.6;
+      }
+      .pdf-contact {
+        font-size: 0.65rem;
+        color: rgba(255, 255, 255, 0.8);
+        text-align: left;
+        line-height: 1.8;
+      }
+      .pdf-pt-bar {
+        background: linear-gradient(90deg, #edd9f5, #fde8f0);
+        padding: 12px 24px;
+        display: flex;
+        gap: 24px;
+        flex-wrap: wrap;
+        border-bottom: 2px solid rgba(139, 58, 158, 0.12);
+      }
+      .pdf-pf {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .pdf-pf-lbl {
+        font-size: 0.58rem;
+        font-weight: 700;
+        color: #6b2080;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .pdf-pf-val {
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: #2d1428;
+      }
+      .pdf-sec-title {
+        font-size: 0.88rem;
+        font-weight: 800;
+        color: #6b2080;
+        padding: 8px 24px 5px;
+        margin: 12px 24px 8px;
+        background: rgba(237, 217, 245, 0.45);
+        border-right: 4px solid #e8739a;
+        border-radius: 0 8px 8px 0;
+      }
+      /* PDF plan table */
+      .pdf-tbl {
+        width: calc(100% - 48px);
+        margin: 0 24px 14px;
+        border-collapse: collapse;
+      }
+      .pdf-tbl th {
+        background: linear-gradient(90deg, #e1bee7, #f8bbd0);
+        padding: 7px 8px;
+        font-size: 0.67rem;
+        font-weight: 700;
+        color: #4a148c;
+        border: 1px solid rgba(139, 58, 158, 0.2);
+        text-align: center;
+      }
+      .pdf-tbl td {
+        border: 1px solid rgba(139, 58, 158, 0.12);
+        padding: 5px 7px;
+        font-size: 0.7rem;
+        color: #3d2558;
+        vertical-align: top;
+      }
+      .pdf-tbl .pdf-row-lbl {
+        background: linear-gradient(180deg, #f3e5f5, #fce4ec);
+        font-weight: 700;
+        font-size: 0.68rem;
+        color: #6a1b9a;
+        text-align: center;
+        width: 60px;
+      }
+      .pdf-tbl .pdf-snack-row td {
+        background: rgba(253, 232, 240, 0.3);
+      }
+      .pdf-inst-box {
+        margin: 4px 24px 10px;
+        padding: 10px 14px;
+        background: rgba(237, 217, 245, 0.3);
+        border-radius: 8px;
+        border: 1px solid rgba(196, 154, 216, 0.3);
+      }
+      .pdf-inst-box h5 {
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: #6b2080;
+        margin-bottom: 4px;
+      }
+      .pdf-inst-box p {
+        font-size: 0.7rem;
+        color: #3d2558;
+        line-height: 1.65;
+        white-space: pre-wrap;
+      }
+      .pdf-foods-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin: 4px 24px 12px;
+      }
+      .pdf-foot {
+        margin-top: 16px;
+        padding: 12px 24px;
+        background: linear-gradient(90deg, #edd9f5, #fde8f0);
+        text-align: center;
+        font-size: 0.62rem;
+        color: #7b6b8d;
+        border-top: 1px solid rgba(196, 154, 216, 0.3);
+        line-height: 1.8;
+      }
+
+      /* ═══════════════════════════════════════════════════════════
+   SCROLLBAR
+═══════════════════════════════════════════════════════════ */
+      ::-webkit-scrollbar {
+        width: 5px;
+        height: 5px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--border);
+        border-radius: 10px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: var(--mauve-light);
+      }
+
+      /* ═══════════════════════════════════════════════════════════
+   RESPONSIVE — TABLET
+═══════════════════════════════════════════════════════════ */
+      @media (max-width: 960px) {
+        :root {
+          --sidebar: 56px;
+        }
+        .sidebar-brand,
+        .nav-group-label,
+        .sidebar-foot,
+        .nav-count {
+          display: none;
+        }
+        .nav-item span:not(.ni-icon) {
+          display: none;
+        }
+        .nav-item {
+          justify-content: center;
+          padding: 13px;
+          margin: 2px 6px;
+        }
+        .stats-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .g4 {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .g5 {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .h-date-badge {
+          display: none;
+        }
+      }
+
+      /* ═══════════════════════════════════════════════════════════
+   RESPONSIVE — MOBILE
+═══════════════════════════════════════════════════════════ */
+      @media (max-width: 640px) {
+        body {
+          overflow: hidden;
+        }
+        .sidebar {
+          display: none;
+        }
+        .mobile-nav {
+          display: flex;
+        }
+        .main {
+          padding-bottom: var(--mob-nav);
+        }
+        .page {
+          padding: 16px 14px 32px;
+        }
+        .stats-grid {
+          grid-template-columns: repeat(2, 1fr);
+          gap: 10px;
+        }
+        .stat-card {
+          padding: 14px;
+        }
+        .stat-val {
+          font-size: 1.4rem;
+        }
+        .g2,
+        .g3,
+        .g4,
+        .g5 {
+          grid-template-columns: 1fr;
+        }
+        .c2,
+        .c3,
+        .c4 {
+          grid-column: span 1;
+        }
+        .g2.keep2 {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .g3.keep3 {
+          grid-template-columns: repeat(3, 1fr);
+        }
+        .mgroup .g3 {
+          grid-template-columns: repeat(3, 1fr);
+          gap: 8px;
+        }
+        .h-main {
+          font-size: 0.92rem;
+        }
+        .h-sub {
+          font-size: 0.65rem;
+        }
+        .h-logo-ring {
+          width: 36px;
+          height: 36px;
+        }
+        .h-logo-ring svg {
+          width: 18px;
+          height: 18px;
+        }
+        .header {
+          padding: 0 14px;
+          gap: 10px;
+        }
+        .pg-head {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+        .pg-actions {
+          width: 100%;
+        }
+        .pg-actions .btn {
+          flex: 1;
+          justify-content: center;
+        }
+        .form-actions {
+          justify-content: stretch;
+        }
+        .form-actions .btn {
+          flex: 1;
+          justify-content: center;
+        }
+        .np-bar {
+          flex-direction: column;
+          gap: 10px;
+        }
+        .np-bar .field {
+          width: 100%;
+        }
+        .pt-hero {
+          border-radius: var(--r-lg);
+          padding: 18px;
+        }
+        .card-body {
+          padding: 16px;
+        }
+        .tbl-wrap {
+          margin: 0 -16px;
+        }
+        .act-cell {
+          flex-wrap: wrap;
+        }
+        .h-patient-tag {
+          max-width: 130px;
+        }
+        .h-right-cluster {
+          gap: 6px;
+        }
+      }
+
+      @media (max-width: 380px) {
+        .mgroup .g3 {
+          grid-template-columns: 1fr;
+        }
+        .stats-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      /* ═══════════════════════════════════════════════════════════
+   PRINTING MODE OVERRIDES (إصلاح الصفحات البيضاء)
+═══════════════════════════════════════════════════════════ */
+      body.printing-mode,
+      body.printing-mode .shell,
+      body.printing-mode .body-area,
+      body.printing-mode .main,
+      body.printing-mode #pdfTarget {
+        overflow: visible !important;
+        height: auto !important;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ══════════════════ SHELL ══════════════════ -->
+    <div class="shell">
+      <!-- HEADER -->
+      <header class="header">
+        <div class="h-logo-ring">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="rgba(255,255,255,0.9)"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path
+              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"
+            />
+            <path d="M8 14s1.5 2 4 2 4-2 4-2" />
+            <line x1="9" y1="9" x2="9.01" y2="9" />
+            <line x1="15" y1="9" x2="15.01" y2="9" />
+          </svg>
+        </div>
+        <div class="h-titles">
+          <div class="h-main">Glowia Clinic — عيادة التغذية</div>
+          <div class="h-sub">
+            إشراف أخصائية التغذية الدكتورة صبا وليد الزعبي
+          </div>
+        </div>
+        <div class="h-right-cluster">
+          <div class="h-patient-tag" id="hPatientTag"></div>
+          <div class="h-date-badge" id="hDate"></div>
+        </div>
+      </header>
+
+      <!-- BODY AREA -->
+      <div class="body-area">
+        <!-- SIDEBAR (desktop) -->
+        <nav class="sidebar" id="desktopSidebar">
+          <div class="sidebar-brand">
+            <div class="sidebar-brand-name">GLOWIA</div>
+            <div class="sidebar-brand-clinic">عيادة التغذية</div>
+          </div>
+
+          <div class="nav-group-label">الرئيسية</div>
+
+          <div
+            class="nav-item active"
+            data-page="dashboard"
+            onclick="navTo('dashboard', this)"
+          >
+            <span class="ni-icon"
+              ><svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <rect x="3" y="3" width="7" height="7" rx="1" />
+                <rect x="14" y="3" width="7" height="7" rx="1" />
+                <rect x="3" y="14" width="7" height="7" rx="1" />
+                <rect x="14" y="14" width="7" height="7" rx="1" /></svg
+            ></span>
+            <span>لوحة التحكم</span>
+            <span class="nav-count" id="navCount">0</span>
+          </div>
+
+          <div
+            class="nav-item"
+            data-page="patient"
+            onclick="navTo('patient', this)"
+          >
+            <span class="ni-icon"
+              ><svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" /></svg
+            ></span>
+            <span>بيانات المريض</span>
+          </div>
+
+          <div
+            class="nav-item"
+            data-page="nutrition"
+            onclick="navTo('nutrition', this)"
+          >
+            <span class="ni-icon"
+              ><svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M3 11l19-9-9 19-2-8-8-2z" /></svg
+            ></span>
+            <span>البرنامج الغذائي</span>
+          </div>
+
+          <div class="nav-group-label" style="margin-top: 10px">إجراءات</div>
+
+          <div class="nav-item" onclick="doNewPatient()">
+            <span class="ni-icon"
+              ><svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="16" />
+                <line x1="8" y1="12" x2="16" y2="12" /></svg
+            ></span>
+            <span>مريض جديد</span>
+          </div>
+
+          <div class="sidebar-foot">
+            Glowia Clinic v2.1<br />
+            البيانات محفوظة محليًا
+          </div>
+        </nav>
+
+        <!-- MAIN CONTENT -->
+        <main class="main" id="mainArea">
+          <!-- ══ DASHBOARD PAGE ══ -->
+          <div class="page active" id="page-dashboard">
+            <div class="pg-head">
+              <div class="pg-head-text">
+                <div class="pg-title">
+                  لوحة <span class="accent">التحكم</span>
+                </div>
+                <div class="pg-subtitle">عرض وإدارة جميع المرضى المسجلين</div>
+              </div>
+              <div class="pg-actions">
+                <button
+                  class="btn btn-primary"
+                  onclick="
+                    doNewPatient();
+                    navTo(
+                      'patient',
+                      document.querySelector('[data-page=patient]'),
+                    );
+                  "
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="16" />
+                    <line x1="8" y1="12" x2="16" y2="12" />
+                  </svg>
+                  إضافة مريض جديد
+                </button>
+              </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="stats-grid">
+              <div class="stat-card">
+                <div class="stat-icon-wrap si-mauve">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                  </svg>
+                </div>
+                <div class="stat-val" id="stTotal">0</div>
+                <div class="stat-lbl">إجمالي المرضى</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-icon-wrap si-rose">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                    <line x1="16" y1="2" x2="16" y2="6" />
+                    <line x1="8" y1="2" x2="8" y2="6" />
+                    <line x1="3" y1="10" x2="21" y2="10" />
+                  </svg>
+                </div>
+                <div class="stat-val" id="stToday">0</div>
+                <div class="stat-lbl">مضافون اليوم</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-icon-wrap si-green">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
+                  </svg>
+                </div>
+                <div class="stat-val" id="stGoal">0</div>
+                <div class="stat-lbl">لديهم هدف وزن</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-icon-wrap si-blue">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path
+                      d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                    />
+                    <polyline points="14 2 14 8 20 8" />
+                    <line x1="16" y1="13" x2="8" y2="13" />
+                    <line x1="16" y1="17" x2="8" y2="17" />
+                    <polyline points="10 9 9 9 8 9" />
+                  </svg>
+                </div>
+                <div class="stat-val" id="stPlans">0</div>
+                <div class="stat-lbl">لديهم برنامج غذائي</div>
+              </div>
+            </div>
+
+            <!-- Table card -->
+            <div class="card">
+              <div class="card-header">
+                <span class="ch-icon"
+                  ><svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <line x1="8" y1="6" x2="21" y2="6" />
+                    <line x1="8" y1="12" x2="21" y2="12" />
+                    <line x1="8" y1="18" x2="21" y2="18" />
+                    <line x1="3" y1="6" x2="3.01" y2="6" />
+                    <line x1="3" y1="12" x2="3.01" y2="12" />
+                    <line x1="3" y1="18" x2="3.01" y2="18" /></svg
+                ></span>
+                <h3>قائمة المرضى</h3>
+                <div style="margin-right: auto">
+                  <div class="search-wrap">
+                    <span class="search-icon"
+                      ><svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      >
+                        <circle cx="11" cy="11" r="8" />
+                        <line x1="21" y1="21" x2="16.65" y2="16.65" /></svg
+                    ></span>
+                    <input
+                      type="text"
+                      id="searchQ"
+                      placeholder="البحث باسم المريض..."
+                      oninput="renderTable()"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div style="padding: 0">
+                <div class="tbl-wrap">
+                  <table class="tbl">
+                    <thead>
+                      <tr>
+                        <th>#</th>
+                        <th>المريض</th>
+                        <th>BMI</th>
+                        <th>الوزن</th>
+                        <th>الطول</th>
+                        <th>العمر</th>
+                        <th>تاريخ</th>
+                        <th>إجراءات</th>
+                      </tr>
+                    </thead>
+                    <tbody id="patientsBody"></tbody>
+                  </table>
+                  <div id="dashEmpty" class="empty-state" style="display: none">
+                    <div class="empty-icon">
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      >
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                      </svg>
+                    </div>
+                    <p>لا يوجد مرضى مسجلون</p>
+                    <small>اضغط "إضافة مريض جديد" للبدء</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ══ PATIENT FORM PAGE ══ -->
+          <div class="page" id="page-patient">
+            <div class="pg-head">
+              <div class="pg-head-text">
+                <div class="pg-title" id="fmTitle">
+                  إضافة <span class="accent">مريض جديد</span>
+                </div>
+                <div class="pg-subtitle" id="fmSub">
+                  أدخلي بيانات المريض بالكامل
+                </div>
+              </div>
+              <div class="pg-actions">
+                <button
+                  class="btn btn-ghost"
+                  onclick="
+                    navTo(
+                      'dashboard',
+                      document.querySelector('[data-page=dashboard]'),
+                    )
+                  "
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <line x1="19" y1="12" x2="5" y2="12" />
+                    <polyline points="12 19 5 12 12 5" />
+                  </svg>
+                  العودة
+                </button>
+                <button class="btn btn-primary" onclick="savePatient()">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path
+                      d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"
+                    />
+                    <polyline points="17 21 17 13 7 13 7 21" />
+                    <polyline points="7 3 7 8 15 8" />
+                  </svg>
+                  حفظ البيانات
+                </button>
+              </div>
+            </div>
+
+            <!-- Name hero -->
+            <div class="pt-hero">
+              <label>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+                اسم المريضة / المريض
+              </label>
+              <input
+                type="text"
+                id="fName"
+                placeholder="أدخلي الاسم الكامل هنا..."
+              />
+            </div>
+
+            <!-- Body Metrics -->
+            <div class="card">
+              <div class="card-header">
+                <span class="ch-icon"
+                  ><svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <line x1="18" y1="20" x2="18" y2="10" />
+                    <line x1="12" y1="20" x2="12" y2="4" />
+                    <line x1="6" y1="20" x2="6" y2="14" /></svg
+                ></span>
+                <h3>المؤشرات الجسدية</h3>
+              </div>
+              <div class="card-body">
+                <div class="g4">
+                  <div class="field">
+                    <label>الوزن <span class="unit">KG</span></label
+                    ><input type="number" id="fWeight" placeholder="0.0" />
+                  </div>
+                  <div class="field">
+                    <label>الطول <span class="unit">CM</span></label
+                    ><input type="number" id="fHeight" placeholder="0" />
+                  </div>
+                  <div class="field">
+                    <label>العمر</label
+                    ><input type="number" id="fAge" placeholder="0" />
+                  </div>
+                  <div class="field">
+                    <label>العمر البيولوجي</label
+                    ><input type="number" id="fBioAge" placeholder="0" />
+                  </div>
+                </div>
+                <div class="divider"></div>
+                <div class="g4">
+                  <div class="field">
+                    <label>BMI</label
+                    ><input type="number" id="fBMI" placeholder="0.0" />
+                  </div>
+                  <div class="field c2">
+                    <label>ملاحظة BMI</label
+                    ><input
+                      type="text"
+                      id="fBMINote"
+                      placeholder="تصنيف / ملاحظة..."
+                    />
+                  </div>
+                  <div class="field">
+                    <label>دهون <span class="unit">KG</span></label
+                    ><input type="number" id="fFat" placeholder="0.0" />
+                  </div>
+                </div>
+                <div class="divider"></div>
+                <div class="g4">
+                  <div class="field">
+                    <label
+                      >الوزن المراد الوصول له
+                      <span class="unit">KG</span></label
+                    ><input
+                      type="number"
+                      id="fTargetWeight"
+                      placeholder="0.0"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Muscles -->
+            <div class="card">
+              <div class="card-header">
+                <span class="ch-icon"
+                  ><svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M18 8h1a4 4 0 0 1 0 8h-1" />
+                    <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z" />
+                    <line x1="6" y1="1" x2="6" y2="4" />
+                    <line x1="10" y1="1" x2="10" y2="4" />
+                    <line x1="14" y1="1" x2="14" y2="4" /></svg
+                ></span>
+                <h3>العضلات — Muscles</h3>
+              </div>
+              <div class="card-body">
+                <div class="g2" style="margin-bottom: 14px">
+                  <div class="field">
+                    <label>عضلات إجمالي <span class="unit">KG</span></label
+                    ><input type="number" id="fMuscles" placeholder="0.0" />
+                  </div>
+                </div>
+                <div class="mgroup">
+                  <div class="mgroup-title">
+                    <span class="mt-icon"
+                      ><svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      >
+                        <line x1="12" y1="2" x2="12" y2="22" />
+                        <path
+                          d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"
+                        /></svg></span
+                    >عضلات الساقين
+                  </div>
+                  <div class="g3 keep3">
+                    <div class="field">
+                      <label>اليمين <span class="unit">KG</span></label
+                      ><input type="number" id="fLegR" placeholder="0.0" />
+                    </div>
+                    <div class="field">
+                      <label>اليسار <span class="unit">KG</span></label
+                      ><input type="number" id="fLegL" placeholder="0.0" />
+                    </div>
+                    <div class="field">
+                      <label>الهدف <span class="unit">KG</span></label
+                      ><input type="number" id="fLegT" placeholder="0.0" />
+                    </div>
+                  </div>
+                </div>
+                <div class="mgroup">
+                  <div class="mgroup-title">
+                    <span class="mt-icon"
+                      ><svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      >
+                        <path
+                          d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+                        /></svg></span
+                    >عضلات الذراعين
+                  </div>
+                  <div class="g3 keep3">
+                    <div class="field">
+                      <label>اليمين <span class="unit">KG</span></label
+                      ><input type="number" id="fArmR" placeholder="0.0" />
+                    </div>
+                    <div class="field">
+                      <label>اليسار <span class="unit">KG</span></label
+                      ><input type="number" id="fArmL" placeholder="0.0" />
+                    </div>
+                    <div class="field">
+                      <label>الهدف <span class="unit">KG</span></label
+                      ><input type="number" id="fArmT" placeholder="0.0" />
+                    </div>
+                  </div>
+                </div>
+                <div class="mgroup">
+                  <div class="mgroup-title">
+                    <span class="mt-icon"
+                      ><svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      >
+                        <rect x="3" y="8" width="18" height="4" rx="1" />
+                        <line x1="12" y1="8" x2="12" y2="21" />
+                        <path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7" />
+                        <path
+                          d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"
+                        /></svg></span
+                    >عضلات الجذع
+                  </div>
+                  <div class="g2 keep2">
+                    <div class="field">
+                      <label>الحالية <span class="unit">KG</span></label
+                      ><input type="number" id="fTrunk" placeholder="0.0" />
+                    </div>
+                    <div class="field">
+                      <label>الهدف <span class="unit">KG</span></label
+                      ><input type="number" id="fTrunkT" placeholder="0.0" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Measurements -->
+            <div class="card">
+              <div class="card-header">
+                <span class="ch-icon"
+                  ><svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M2 12h20" />
+                    <path d="M2 12l3-3 3 3 3-3 3 3 3-3 3 3" /></svg
+                ></span>
+                <h3>القياسات — Measurements</h3>
+              </div>
+              <div class="card-body">
+                <div class="g5">
+                  <div class="field">
+                    <label>الصدر <span class="unit">CM</span></label
+                    ><input type="number" id="fChest" placeholder="0.0" />
+                  </div>
+                  <div class="field">
+                    <label>الخصر <span class="unit">CM</span></label
+                    ><input type="number" id="fWaist" placeholder="0.0" />
+                  </div>
+                  <div class="field">
+                    <label>الورك <span class="unit">CM</span></label
+                    ><input type="number" id="fHip" placeholder="0.0" />
+                  </div>
+                  <div class="field">
+                    <label>الزند <span class="unit">CM</span></label
+                    ><input type="number" id="fWrist" placeholder="0.0" />
+                  </div>
+                  <div class="field">
+                    <label>الفخذ <span class="unit">CM</span></label
+                    ><input type="number" id="fThigh" placeholder="0.0" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Notes -->
+            <div class="card">
+              <div class="card-header">
+                <span class="ch-icon"
+                  ><svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path
+                      d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
+                    />
+                    <path
+                      d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"
+                    /></svg
+                ></span>
+                <h3>ملاحظات الدكتورة</h3>
+              </div>
+              <div class="card-body">
+                <div class="field">
+                  <textarea
+                    id="fNotes"
+                    placeholder="الملاحظات الطبية والتغذوية..."
+                    style="min-height: 110px"
+                  ></textarea>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button
+                class="btn btn-ghost"
+                onclick="
+                  navTo(
+                    'dashboard',
+                    document.querySelector('[data-page=dashboard]'),
+                  )
+                "
+              >
+                إلغاء
+              </button>
+              <button class="btn btn-outline" onclick="gotoNutrition()">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M3 11l19-9-9 19-2-8-8-2z" />
+                </svg>
+                البرنامج الغذائي
+              </button>
+              <button class="btn btn-primary" onclick="savePatient()">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path
+                    d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"
+                  />
+                  <polyline points="17 21 17 13 7 13 7 21" />
+                  <polyline points="7 3 7 8 15 8" />
+                </svg>
+                حفظ البيانات
+              </button>
+            </div>
+          </div>
+
+          <!-- ══ NUTRITION PAGE ══ -->
+          <div class="page" id="page-nutrition">
+            <div class="pg-head">
+              <div class="pg-head-text">
+                <div class="pg-title">
+                  البرنامج <span class="accent">الغذائي</span>
+                </div>
+                <div class="pg-subtitle">جدول أسبوعي بست وجبات يومياً</div>
+              </div>
+              <div class="pg-actions">
+                <button class="btn btn-ghost btn-sm" onclick="clearPlan()">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <polyline points="3 6 5 6 21 6" />
+                    <path
+                      d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+                    />
+                  </svg>
+                  مسح الجدول
+                </button>
+                <button class="btn btn-outline btn-sm" onclick="savePlan()">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path
+                      d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"
+                    />
+                    <polyline points="17 21 17 13 7 13 7 21" />
+                  </svg>
+                  حفظ
+                </button>
+                <button class="btn btn-primary btn-sm" onclick="exportPDF()">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path
+                      d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                    />
+                    <polyline points="14 2 14 8 20 8" />
+                    <line x1="16" y1="13" x2="8" y2="13" />
+                    <line x1="16" y1="17" x2="8" y2="17" />
+                  </svg>
+                  تصدير PDF
+                </button>
+              </div>
+            </div>
+
+            <!-- Patient bar -->
+            <div class="np-bar">
+              <div>
+                <div class="np-name" id="npName">لم يتم اختيار مريض</div>
+                <div class="np-sub">
+                  اختر مريضًا من لوحة التحكم أو أدخل الاسم يدويًا
+                </div>
+              </div>
+              <div class="field" style="min-width: 180px; margin: 0">
+                <input
+                  type="text"
+                  id="npNameIn"
+                  placeholder="اسم المريض..."
+                  style="border-radius: var(--r-pill); padding: 9px 14px"
+                />
+              </div>
+              <div class="field" style="min-width: 140px; margin: 0">
+                <input
+                  type="text"
+                  id="npDate"
+                  placeholder="التاريخ..."
+                  style="border-radius: var(--r-pill); padding: 9px 14px"
+                />
+              </div>
+            </div>
+
+            <!-- 6-meal 7-day table -->
+            <div class="card">
+              <div class="card-header">
+                <span class="ch-icon"
+                  ><svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                    <line x1="16" y1="2" x2="16" y2="6" />
+                    <line x1="8" y1="2" x2="8" y2="6" />
+                    <line x1="3" y1="10" x2="21" y2="10" /></svg
+                ></span>
+                <h3>الجدول الأسبوعي — فطور، سناك، غداء، سناك، عشاء، سناك</h3>
+              </div>
+              <div class="card-body" style="padding: 14px">
+                <div class="plan-table-outer">
+                  <table class="plan-table" id="planTable">
+                    <thead>
+                      <tr>
+                        <th style="width: 72px">الوجبة</th>
+                        <th>السبت</th>
+                        <th>الأحد</th>
+                        <th>الاثنين</th>
+                        <th>الثلاثاء</th>
+                        <th>الأربعاء</th>
+                        <th>الخميس</th>
+                        <th>الجمعة</th>
+                      </tr>
+                    </thead>
+                    <tbody id="planBody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- Instructions -->
+            <div class="g2">
+              <div class="card">
+                <div class="card-header">
+                  <span class="ch-icon"
+                    ><svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <circle cx="12" cy="12" r="10" />
+                      <line x1="12" y1="8" x2="12" y2="12" />
+                      <line x1="12" y1="16" x2="12.01" y2="16" /></svg
+                  ></span>
+                  <h3>التعليمات العامة</h3>
+                </div>
+                <div class="card-body">
+                  <textarea
+                    class="inst-ta"
+                    id="npInst"
+                    placeholder="اكتبي التعليمات العامة للمريض..."
+                  ></textarea>
+                </div>
+              </div>
+              <div class="card">
+                <div class="card-header">
+                  <span class="ch-icon"
+                    ><svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path d="M3 3l18 18" />
+                      <path d="M10.5 10.677a2 2 0 0 0 2.823 2.823" />
+                      <path
+                        d="M7.362 7.561C5.68 8.74 4.279 10.42 3 12c1.889 2.991 5.282 6 9 6 1.55 0 3.043-.523 4.395-1.35"
+                      />
+                      <path
+                        d="M19.08 13.37A13.444 13.444 0 0 0 21 12c-1.889-2.991-5.282-6-9-6-.503 0-1 .05-1.488.144"
+                      /></svg
+                  ></span>
+                  <h3>الأطعمة المسموح بها / الممنوعة</h3>
+                </div>
+                <div class="card-body">
+                  <div class="inst-label">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    الأطعمة المسموح بها
+                  </div>
+                  <textarea
+                    class="inst-ta"
+                    id="npAllowed"
+                    placeholder="قائمة الأطعمة المسموح بها..."
+                    style="min-height: 70px; margin-bottom: 14px"
+                  ></textarea>
+                  <div class="inst-label" style="color: var(--rose-dark)">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="var(--rose-dark)"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <circle cx="12" cy="12" r="10" />
+                      <line x1="15" y1="9" x2="9" y2="15" />
+                      <line x1="9" y1="9" x2="15" y2="15" />
+                    </svg>
+                    الأطعمة الممنوعة
+                  </div>
+                  <textarea
+                    class="inst-ta"
+                    id="npForbidden"
+                    placeholder="قائمة الأطعمة الممنوعة..."
+                    style="min-height: 70px"
+                  ></textarea>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button class="btn btn-ghost" onclick="savePlan()">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path
+                    d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"
+                  />
+                  <polyline points="17 21 17 13 7 13 7 21" />
+                </svg>
+                حفظ البرنامج
+              </button>
+              <button class="btn btn-primary" onclick="exportPDF()">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path
+                    d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                  />
+                  <polyline points="14 2 14 8 20 8" />
+                </svg>
+                تصدير PDF احترافي
+              </button>
+            </div>
+          </div>
+        </main>
+      </div>
+      <!-- /body-area -->
+
+      <!-- MOBILE NAV -->
+      <nav class="mobile-nav" id="mobileNav">
+        <button
+          class="mob-nav-item active"
+          data-page="dashboard"
+          onclick="navTo('dashboard', this)"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <rect x="3" y="3" width="7" height="7" rx="1" />
+            <rect x="14" y="3" width="7" height="7" rx="1" />
+            <rect x="3" y="14" width="7" height="7" rx="1" />
+            <rect x="14" y="14" width="7" height="7" rx="1" />
+          </svg>
+          التحكم
+        </button>
+        <button
+          class="mob-nav-item"
+          data-page="patient"
+          onclick="navTo('patient', this)"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+            <circle cx="12" cy="7" r="4" />
+          </svg>
+          المريض
+        </button>
+        <button
+          class="mob-nav-item"
+          onclick="
+            doNewPatient();
+            navTo('patient', document.querySelector('[data-page=patient]'));
+          "
+          style="color: var(--mauve)"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="var(--mauve)"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="16" />
+            <line x1="8" y1="12" x2="16" y2="12" />
+          </svg>
+          جديد
+        </button>
+        <button
+          class="mob-nav-item"
+          data-page="nutrition"
+          onclick="navTo('nutrition', this)"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M3 11l19-9-9 19-2-8-8-2z" />
+          </svg>
+          الغذائي
+        </button>
+        <button
+          class="mob-nav-item"
+          onclick="exportPDF()"
+          style="font-size: 0.6rem"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path
+              d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+            />
+            <polyline points="14 2 14 8 20 8" />
+          </svg>
+          PDF
+        </button>
+      </nav>
+    </div>
+    <!-- /shell -->
+
+    <!-- TOAST -->
+    <div class="toast" id="toast"></div>
+
+    <!-- DELETE DIALOG -->
+    <div class="overlay" id="delOverlay">
+      <div class="dialog">
+        <div class="dialog-icon">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="3 6 5 6 21 6" />
+            <path
+              d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+            />
+            <line x1="10" y1="11" x2="10" y2="17" />
+            <line x1="14" y1="11" x2="14" y2="17" />
+          </svg>
+        </div>
+        <h3>تأكيد الحذف</h3>
+        <p>
+          هل أنتِ متأكدة من حذف بيانات هذا المريض؟<br />لا يمكن التراجع عن هذا
+          الإجراء.
+        </p>
+        <div class="dialog-acts">
+          <button class="btn btn-ghost" onclick="closeDialog()">إلغاء</button>
+          <button class="btn btn-danger" onclick="confirmDelete()">
+            تأكيد الحذف
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PDF TARGET (hidden) -->
+    <div id="pdfTarget"></div>
+
+    <!-- ══════════════════ JAVASCRIPT ══════════════════ -->
+    <script>
+      /* ─── STATE ─── */
+      const SK = "glowia_pts_v3";
+      const SPK = "glowia_plans_v3";
+      let patients = [];
+      let plans = {};
+      let editId = null;
+      let delId = null;
+      let planPtId = null;
+
+      const DAYS = [
+        "السبت",
+        "الأحد",
+        "الاثنين",
+        "الثلاثاء",
+        "الأربعاء",
+        "الخميس",
+        "الجمعة",
+      ];
+      /* 6-meal sequence: breakfast, snack, lunch, snack, dinner, snack */
+      const MEALS = [
+        { id: "فطور", label: "فطور", isSnack: false },
+        { id: "سناك1", label: "سناك", isSnack: true },
+        { id: "غداء", label: "غداء", isSnack: false },
+        { id: "سناك2", label: "سناك", isSnack: true },
+        { id: "عشاء", label: "عشاء", isSnack: false },
+        { id: "سناك3", label: "سناك", isSnack: true },
+      ];
+
+      /* ─── FORM MAP ─── */
+      const FM = {
+        Name: "fName",
+        Weight: "fWeight",
+        Height: "fHeight",
+        Age: "fAge",
+        BioAge: "fBioAge",
+        BMI: "fBMI",
+        BMINote: "fBMINote",
+        Fat: "fFat",
+        TargetWeight: "fTargetWeight",
+        Muscles: "fMuscles",
+        LegR: "fLegR",
+        LegL: "fLegL",
+        LegT: "fLegT",
+        ArmR: "fArmR",
+        ArmL: "fArmL",
+        ArmT: "fArmT",
+        Trunk: "fTrunk",
+        TrunkT: "fTrunkT",
+        Chest: "fChest",
+        Waist: "fWaist",
+        Hip: "fHip",
+        Wrist: "fWrist",
+        Thigh: "fThigh",
+        Notes: "fNotes",
+      };
+
+      /* ─── INIT ─── */
+      function init() {
+        load();
+        buildPlanTable();
+        setDate();
+        render();
+      }
+
+      function setDate() {
+        const d = new Date();
+        const s = d.toLocaleDateString("ar-SA", {
+          weekday: "short",
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        });
+        document.getElementById("hDate").textContent = s;
+        document.getElementById("npDate").value = d.toLocaleDateString("ar-SA");
+      }
+
+      function load() {
+        try {
+          patients = JSON.parse(localStorage.getItem(SK) || "[]");
+        } catch {
+          patients = [];
+        }
+        try {
+          plans = JSON.parse(localStorage.getItem(SPK) || "{}");
+        } catch {
+          plans = {};
+        }
+      }
+      function saveAll() {
+        localStorage.setItem(SK, JSON.stringify(patients));
+      }
+      function savePlanStore() {
+        localStorage.setItem(SPK, JSON.stringify(plans));
+      }
+
+      /* ─── NAVIGATION ─── */
+      function navTo(pageId, el) {
+        document
+          .querySelectorAll(".page")
+          .forEach((p) => p.classList.remove("active"));
+        // desktop nav
+        document
+          .querySelectorAll(".nav-item")
+          .forEach((n) => n.classList.remove("active"));
+        // mobile nav
+        document
+          .querySelectorAll(".mob-nav-item")
+          .forEach((n) => n.classList.remove("active"));
+
+        document.getElementById("page-" + pageId).classList.add("active");
+
+        // highlight correct nav items
+        document
+          .querySelectorAll("[data-page=" + pageId + "]")
+          .forEach((n) => n.classList.add("active"));
+
+        if (pageId === "dashboard") {
+          render();
+        }
+        if (pageId === "nutrition") {
+          loadPlanUI();
+        }
+
+        // scroll to top
+        document.getElementById("mainArea").scrollTop = 0;
+      }
+
+      /* ─── PATIENT CRUD ─── */
+      function doNewPatient() {
+        editId = null;
+        planPtId = null;
+        clearFm();
+        document.getElementById("fmTitle").innerHTML =
+          'إضافة <span class="accent">مريض جديد</span>';
+        document.getElementById("fmSub").textContent =
+          "أدخلي بيانات المريض بالكامل";
+        setPatientCtx(null);
+      }
+
+      function clearFm() {
+        Object.values(FM).forEach((id) => {
+          const el = document.getElementById(id);
+          if (el) el.value = "";
+        });
+      }
+
+      function readFm() {
+        const d = {};
+        Object.entries(FM).forEach(([k, id]) => {
+          const el = document.getElementById(id);
+          if (!el) return;
+          const v = el.value.trim();
+          const key = k[0].toLowerCase() + k.slice(1);
+          d[key] = el.type === "number" ? (v === "" ? "" : parseFloat(v)) : v;
+        });
+        return d;
+      }
+
+      function fillFm(p) {
+        Object.entries(FM).forEach(([k, id]) => {
+          const el = document.getElementById(id);
+          if (!el) return;
+          const key = k[0].toLowerCase() + k.slice(1);
+          if (p[key] !== undefined && p[key] !== "") el.value = p[key];
+        });
+      }
+
+      function savePatient() {
+        const d = readFm();
+        if (!d.name) {
+          toast("يرجى إدخال اسم المريض", true);
+          document.getElementById("fName").focus();
+          return;
+        }
+
+        if (editId) {
+          const i = patients.findIndex((x) => x.id === editId);
+          if (i > -1) {
+            patients[i] = {
+              ...patients[i],
+              ...d,
+              updatedAt: new Date().toISOString(),
+            };
+          }
+          toast("تم تحديث بيانات المريض بنجاح");
+        } else {
+          const np = {
+            id: uid(),
+            ...d,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          };
+          patients.push(np);
+          editId = np.id;
+          planPtId = np.id;
+          toast("تم حفظ المريض بنجاح");
+        }
+        saveAll();
+        updateBadge();
+        updateStats();
+        setPatientCtx(d.name);
+      }
+
+      function loadPatient(id) {
+        const p = patients.find((x) => x.id === id);
+        if (!p) return;
+        editId = id;
+        planPtId = id;
+        fillFm(p);
+        document.getElementById("fmTitle").innerHTML =
+          'تعديل <span class="accent">' + (p.name || "المريض") + "</span>";
+        document.getElementById("fmSub").textContent =
+          "راجعي وعدّلي بيانات المريض";
+        setPatientCtx(p.name);
+        navTo("patient", document.querySelector("[data-page=patient]"));
+      }
+
+      function gotoNutrition() {
+        const d = readFm();
+        if (d.name) savePatient();
+        navTo("nutrition", document.querySelector("[data-page=nutrition]"));
+      }
+
+      function openNutrition(id) {
+        const p = patients.find((x) => x.id === id);
+        if (!p) return;
+        editId = id;
+        planPtId = id;
+        fillFm(p);
+        setPatientCtx(p.name);
+        document.getElementById("npName").textContent = p.name || "—";
+        document.getElementById("npNameIn").value = p.name || "";
+        loadPlanUI();
+        navTo("nutrition", document.querySelector("[data-page=nutrition]"));
+      }
+
+      function setPatientCtx(name) {
+        const el = document.getElementById("hPatientTag");
+        if (name) {
+          el.textContent = name;
+          el.classList.add("visible");
+        } else {
+          el.textContent = "";
+          el.classList.remove("visible");
+        }
+      }
+
+      /* ─── DASHBOARD RENDER ─── */
+      function render() {
+        renderTable();
+        updateStats();
+        updateBadge();
+      }
+
+      function renderTable() {
+        const q = (document.getElementById("searchQ")?.value || "")
+          .trim()
+          .toLowerCase();
+        const f = q
+          ? patients.filter((p) => (p.name || "").toLowerCase().includes(q))
+          : patients;
+        const body = document.getElementById("patientsBody");
+        const empty = document.getElementById("dashEmpty");
+
+        if (!f.length) {
+          body.innerHTML = "";
+          empty.style.display = "";
+          empty.innerHTML = q
+            ? '<div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div><p>لا توجد نتائج</p><small>جربي كلمة بحث أخرى</small>'
+            : '<div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><p>لا يوجد مرضى مسجلون</p><small>اضغط "إضافة مريض جديد" للبدء</small>';
+          return;
+        }
+        empty.style.display = "none";
+
+        const sorted = [...f].sort(
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
+        );
+        body.innerHTML = sorted
+          .map((p, i) => {
+            const hasPlan = !!plans[p.id];
+            return `<tr>
+      <td style="color:var(--muted);font-size:0.76rem;">${i + 1}</td>
+      <td>
+        <div class="pt-name-cell">
+          <div class="av">${initials(p.name)}</div>
+          <div>
+            <div style="font-weight:600;">${p.name || "—"}</div>
+            ${hasPlan ? '<div class="pt-sub">لديه برنامج غذائي</div>' : ""}
+          </div>
+        </div>
+      </td>
+      <td>${bmiChip(p.bmi)}</td>
+      <td>${p.weight ? p.weight + " kg" : "—"}</td>
+      <td>${p.height ? p.height + " cm" : "—"}</td>
+      <td>${p.age ? p.age + " سنة" : "—"}</td>
+      <td><span class="date-chip">${fmtDate(p.createdAt)}</span></td>
+      <td>
+        <div class="act-cell">
+          <button class="btn btn-outline btn-xs" onclick="loadPatient('${p.id}')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            تعديل
+          </button>
+          <button class="btn btn-xs" style="background:var(--mauve-pale);color:var(--mauve);border:1.5px solid var(--mauve-light);" onclick="openNutrition('${p.id}')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>
+            برنامج
+          </button>
+          <button class="btn btn-xs" style="background:#fff0f0;color:#b02020;border:1.5px solid #f5c6c6;" onclick="askDelete('${p.id}')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          </button>
+        </div>
+      </td>
+    </tr>`;
+          })
+          .join("");
+      }
+
+      function updateStats() {
+        const today = new Date().toDateString();
+        document.getElementById("stTotal").textContent = patients.length;
+        document.getElementById("stToday").textContent = patients.filter(
+          (p) => new Date(p.createdAt).toDateString() === today,
+        ).length;
+        document.getElementById("stGoal").textContent = patients.filter(
+          (p) => p.targetWeight,
+        ).length;
+        document.getElementById("stPlans").textContent = Object.keys(
+          plans,
+        ).filter((id) => patients.find((p) => p.id === id)).length;
+      }
+
+      function updateBadge() {
+        document.getElementById("navCount").textContent = patients.length;
+      }
+
+      /* ─── DELETE ─── */
+      function askDelete(id) {
+        delId = id;
+        document.getElementById("delOverlay").classList.add("open");
+      }
+      function closeDialog() {
+        delId = null;
+        document.getElementById("delOverlay").classList.remove("open");
+      }
+      function confirmDelete() {
+        if (!delId) return;
+        patients = patients.filter((x) => x.id !== delId);
+        delete plans[delId];
+        saveAll();
+        savePlanStore();
+        if (editId === delId) {
+          editId = null;
+          clearFm();
+          setPatientCtx(null);
+        }
+        if (planPtId === delId) planPtId = null;
+        delId = null;
+        closeDialog();
+        render();
+        toast("تم حذف المريض بنجاح");
+      }
+
+      /* ─── NUTRITION PLAN TABLE ─── */
+      function buildPlanTable() {
+        const body = document.getElementById("planBody");
+        body.innerHTML = "";
+        MEALS.forEach((m) => {
+          const tr = document.createElement("tr");
+          if (m.isSnack) tr.classList.add("meal-snack");
+          let html = `<td class="row-lbl">${m.label}</td>`;
+          DAYS.forEach((day) => {
+            html += `<td><textarea placeholder="" id="cell_${m.id}_${day}"></textarea></td>`;
+          });
+          tr.innerHTML = html;
+          body.appendChild(tr);
+        });
+      }
+
+      function getPlanData() {
+        const d = {};
+        MEALS.forEach((m) => {
+          d[m.id] = {};
+          DAYS.forEach((day) => {
+            const el = document.getElementById(`cell_${m.id}_${day}`);
+            d[m.id][day] = el ? el.value : "";
+          });
+        });
+        d._inst = document.getElementById("npInst").value;
+        d._allowed = document.getElementById("npAllowed").value;
+        d._forbidden = document.getElementById("npForbidden").value;
+        d._name = document.getElementById("npNameIn").value;
+        d._date = document.getElementById("npDate").value;
+        return d;
+      }
+
+      function setPlanData(d) {
+        if (!d) return;
+        MEALS.forEach((m) => {
+          DAYS.forEach((day) => {
+            const el = document.getElementById(`cell_${m.id}_${day}`);
+            if (el) el.value = (d[m.id] && d[m.id][day]) || "";
+          });
+        });
+        const safe = (id, v) => {
+          const el = document.getElementById(id);
+          if (el && v) el.value = v;
+        };
+        safe("npInst", d._inst);
+        safe("npAllowed", d._allowed);
+        safe("npForbidden", d._forbidden);
+        safe("npNameIn", d._name);
+        safe("npDate", d._date);
+        if (d._name) document.getElementById("npName").textContent = d._name;
+      }
+
+      function loadPlanUI() {
+        const key = planPtId || "_draft";
+        if (plans[key]) setPlanData(plans[key]);
+        const p = planPtId ? patients.find((x) => x.id === planPtId) : null;
+        if (p) {
+          document.getElementById("npName").textContent = p.name || "—";
+          document.getElementById("npNameIn").value = p.name || "";
+        }
+      }
+
+      function savePlan() {
+        const d = getPlanData();
+        const key = planPtId || "_draft";
+        plans[key] = d;
+        savePlanStore();
+        toast("تم حفظ البرنامج الغذائي");
+      }
+
+      function clearPlan() {
+        MEALS.forEach((m) =>
+          DAYS.forEach((day) => {
+            const el = document.getElementById(`cell_${m.id}_${day}`);
+            if (el) el.value = "";
+          }),
+        );
+        ["npInst", "npAllowed", "npForbidden"].forEach((id) => {
+          const el = document.getElementById(id);
+          if (el) el.value = "";
+        });
+      }
+
+      /* ─── PDF EXPORT ─── */
+      /* ─── PDF EXPORT ─── */
+      function exportPDF() {
+        savePlan();
+        const d = getPlanData();
+        const ptName =
+          d._name || document.getElementById("npName").textContent || "—";
+        const ptDate = d._date || new Date().toLocaleDateString("ar-SA");
+        const pt = planPtId ? patients.find((x) => x.id === planPtId) : null;
+
+        /* Plan rows */
+        let rows = "";
+        MEALS.forEach((m) => {
+          rows += `<tr class="${m.isSnack ? "pdf-snack-row" : ""}">`;
+          rows += `<td class="pdf-row-lbl">${m.label}</td>`;
+          DAYS.forEach((day) => {
+            const v = (d[m.id] && d[m.id][day]) || "";
+            rows += `<td>${v.replace(/\n/g, "<br>")}</td>`;
+          });
+          rows += `</tr>`;
+        });
+
+        /* Patient metrics */
+        let metricsRow = "";
+        if (pt) {
+          const fs = [
+            ["الوزن", pt.weight ? pt.weight + " kg" : ""],
+            ["الطول", pt.height ? pt.height + " cm" : ""],
+            ["العمر", pt.age ? pt.age + " سنة" : ""],
+            ["BMI", pt.bmi || ""],
+            ["الهدف", pt.targetWeight ? pt.targetWeight + " kg" : ""],
+            ["الدهون", pt.fat ? pt.fat + " kg" : ""],
+          ].filter((f) => f[1]);
+          if (fs.length) {
+            metricsRow = `<div class="pdf-pt-bar">${fs.map((f) => `<div class="pdf-pf"><span class="pdf-pf-lbl">${f[0]}</span><span class="pdf-pf-val">${f[1]}</span></div>`).join("")}</div>`;
+          }
+        }
+
+        const html = `
+<div class="pdf-wrap" dir="rtl">
+  <div class="pdf-hdr">
+    <div class="pdf-hdr-inner">
+      <div>
+        <div class="pdf-clinic-name">Glowia Clinic — عيادة التغذية</div>
+        <div class="pdf-clinic-sub">إشراف أخصائية التغذية الدكتورة صبا وليد الزعبي</div>
+        <div class="pdf-cred">BSc Pharmacy — Damascus University &nbsp;|&nbsp; CPD_UK Certified</div>
+      </div>
+      <div class="pdf-contact" dir="ltr">
+        <div>sebaalzoubi03@gmail.com</div>
+        <div>0982720825</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pdf-pt-bar" style="display:flex;gap:22px;flex-wrap:wrap;">
+    <div class="pdf-pf"><span class="pdf-pf-lbl">المريض/ة</span><span class="pdf-pf-val">${ptName}</span></div>
+    <div class="pdf-pf"><span class="pdf-pf-lbl">التاريخ</span><span class="pdf-pf-val">${ptDate}</span></div>
+    ${pt && pt.weight ? `<div class="pdf-pf"><span class="pdf-pf-lbl">الوزن</span><span class="pdf-pf-val">${pt.weight} kg</span></div>` : ""}
+    ${pt && pt.bmi ? `<div class="pdf-pf"><span class="pdf-pf-lbl">BMI</span><span class="pdf-pf-val">${pt.bmi}</span></div>` : ""}
+    ${pt && pt.targetWeight ? `<div class="pdf-pf"><span class="pdf-pf-lbl">الهدف</span><span class="pdf-pf-val">${pt.targetWeight} kg</span></div>` : ""}
+  </div>
+
+  <div class="pdf-sec-title">البرنامج الغذائي الأسبوعي</div>
+  <table class="pdf-tbl">
+    <thead><tr>
+      <th style="width:55px;">الوجبة</th>
+      ${DAYS.map((d) => `<th>${d}</th>`).join("")}
+    </tr></thead>
+    <tbody>${rows}</tbody>
+  </table>
+
+  ${d._inst ? `<div class="pdf-sec-title">التعليمات العامة</div><div class="pdf-inst-box"><p>${d._inst}</p></div>` : ""}
+
+  ${
+    d._allowed || d._forbidden
+      ? `
+  <div class="pdf-sec-title">الأطعمة المسموح بها والممنوعة</div>
+  <div class="pdf-foods-grid">
+    ${d._allowed ? `<div class="pdf-inst-box"><h5>المسموح بها</h5><p>${d._allowed}</p></div>` : ""}
+    ${d._forbidden ? `<div class="pdf-inst-box"><h5>الممنوعة</h5><p>${d._forbidden}</p></div>` : ""}
+  </div>`
+      : ""
+  }
+
+  ${pt && pt.notes ? `<div class="pdf-sec-title">ملاحظات الدكتورة</div><div class="pdf-inst-box"><p>${pt.notes}</p></div>` : ""}
+
+  <div class="pdf-foot">
+    Glowia Clinic — عيادة التغذية &nbsp;|&nbsp; الدكتورة صبا وليد الزعبي &nbsp;|&nbsp;
+    sebaalzoubi03@gmail.com &nbsp;|&nbsp; 0982720825<br>
+    <span style="font-size:0.58rem;">هذا البرنامج الغذائي مُعدّ خصيصًا لهذا المريض</span>
+  </div>
+</div>`;
+
+        const target = document.getElementById("pdfTarget");
+        target.innerHTML = html;
+
+        // FIX 1 & 4: Ensure visibility and proper sizing (A4 Portrait width is approx 210mm)
+        target.style.cssText =
+          "display:block; position:absolute; top:0; left:0; width:210mm; z-index:-1; background:#fff; font-family:Tajawal,Tahoma,sans-serif;";
+
+        // FIX 3: Add temporary printing mode class
+        document.body.classList.add("printing-mode");
+
+        toast("⏳ جاري إنشاء الملف...");
+
+        // FIX 2: Apply precise configuration from prompt
+        html2pdf()
+          .set({
+            margin: 10,
+            filename: "Nutrition_Plan.pdf",
+            image: { type: "jpeg", quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+            jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+          })
+          .from(target)
+          .save()
+          .then(() => {
+            // Cleanup after export
+            target.style.display = "none";
+            target.innerHTML = "";
+            document.body.classList.remove("printing-mode");
+            toast("✅ تم تصدير PDF بنجاح");
+          })
+          .catch((e) => {
+            // Cleanup on error
+            target.style.display = "none";
+            document.body.classList.remove("printing-mode");
+            toast("❌ خطأ في التصدير", true);
+          });
+      }
+      /* ─── HELPERS ─── */
+      function uid() {
+        return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+      }
+
+      function initials(n) {
+        if (!n) return "؟";
+        const p = n.trim().split(" ");
+        return p.length >= 2 ? p[0][0] + p[1][0] : p[0][0] || "؟";
+      }
+
+      function fmtDate(iso) {
+        if (!iso) return "—";
+        try {
+          return new Date(iso).toLocaleDateString("ar-SA", {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+          });
+        } catch {
+          return "—";
+        }
+      }
+
+      function bmiChip(bmi) {
+        if (bmi === "" || bmi === undefined || bmi === null)
+          return '<span class="chip chip-na">—</span>';
+        const n = parseFloat(bmi);
+        if (n < 18.5) return `<span class="chip chip-u">${n} نحافة</span>`;
+        if (n < 25) return `<span class="chip chip-n">${n} طبيعي</span>`;
+        if (n < 30) return `<span class="chip chip-o">${n} زيادة</span>`;
+        return `<span class="chip chip-ob">${n} سمنة</span>`;
+      }
+
+      let _toastT;
+      function toast(msg, warn = false) {
+        const el = document.getElementById("toast");
+        el.textContent = msg;
+        el.style.background = warn
+          ? "linear-gradient(135deg,#b02020,#d94040)"
+          : "linear-gradient(135deg,var(--mauve-deep),var(--rose))";
+        el.classList.add("show");
+        clearTimeout(_toastT);
+        _toastT = setTimeout(() => el.classList.remove("show"), 3200);
+      }
+
+      /* ─── OVERLAY ─── */
+      document
+        .getElementById("delOverlay")
+        .addEventListener("click", function (e) {
+          if (e.target === this) closeDialog();
+        });
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") closeDialog();
+      });
+
+      /* ─── KICK OFF ─── */
+      init();
+    </script>
+  </body>
+</html>
