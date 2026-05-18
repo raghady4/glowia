@@ -831,6 +831,83 @@ body {
 /* ═══════════════════════════════════════════════════════════
    PATIENTS TABLE
 ═══════════════════════════════════════════════════════════ */
+/* Day Tables - New Design */
+.day-tables-container {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.day-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: var(--sh-sm);
+    overflow: hidden;
+    border: 1px solid var(--border);
+}
+
+.day-header {
+    background: linear-gradient(90deg, var(--mauve), var(--rose));
+    color: white;
+    padding: 14px 20px;
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.day-title {
+    display: inline-block;
+}
+
+.single-day-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.single-day-table th {
+    padding: 12px 16px;
+    background: var(--blush-card);
+    font-weight: 700;
+    color: var(--mauve-deep);
+    text-align: right;
+}
+
+.meal-col { width: 110px; }
+.content-col { }
+
+.single-day-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border-soft);
+}
+
+.meal-lbl {
+    font-weight: 700;
+    color: var(--mauve-deep);
+    background: var(--mauve-pale);
+}
+
+.single-day-table textarea {
+    width: 100%;
+    min-height: 110px;
+    border: none;
+    background: transparent;
+    font-family: inherit;
+    font-size: 0.9rem;
+    line-height: 1.8;
+    resize: vertical;
+    padding: 10px 12px;
+}
+
+.single-day-table textarea:focus {
+    background: rgba(237, 217, 245, 0.25);
+    outline: 2px solid var(--mauve-light);
+}
+
+/* Snack rows */
+.meal-snack .meal-lbl {
+    color: var(--rose-dark);
+    background: #fde8f0;
+}
+
 .tbl-wrap {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
@@ -1109,25 +1186,27 @@ body {
   padding: 9px 6px;
   width: 72px;
   white-space: nowrap;
+  border-right: 3px solid var(--mauve);
 }
 .plan-table .meal-snack .row-lbl {
+  border-right-color: var(--rose);
   color: var(--rose-dark);
   background: linear-gradient(180deg, #fde8f0, #fff5f9);
 }
 .plan-table textarea {
   width: 100%;
-  min-height: 56px;
+  min-height: 90px;
   border: none;
   background: transparent;
   font-family: inherit;
-  font-size: 0.76rem;
+  font-size: 0.8rem;
   color: var(--ink);
   resize: none;
   outline: none;
   direction: rtl;
   text-align: right;
-  padding: 6px;
-  line-height: 1.5;
+  padding: 8px 10px;
+  line-height: 1.7;
   appearance: none;
   -webkit-appearance: none;
 }
@@ -1324,12 +1403,18 @@ body {
 }
 
 .pdf-page {
-    width: 210mm;
-    padding: 15mm;
-    direction: rtl;
-    background: white;
-    font-family: 'Tajawal', sans-serif;
+    max-width: 210mm;
+    margin: 0 auto;
+    page-break-after: auto;
 }
+.pdf-group {
+    margin-bottom: 28px;
+    page-break-inside: avoid;
+}
+.pdf-group, .pdf-day-card {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
 
 .pdf-header {
     border-bottom: 4px solid #E8739A;
@@ -1624,3 +1709,121 @@ body.printing-mode #pdfTarget {
   overflow: visible !important;
   height: auto !important;
 }
+/* PDF - Per Day Tables */
+
+.pdf-meal {
+    background: #F8E8F5;
+    font-weight: 700;
+    color: #8B3A9E;
+    border-right: 1px solid #E0C4E8;
+}
+
+.pdf-content {
+    direction: rtl;
+    text-align: right;
+}
+.pdf-single-day-table tr:last-child td {
+    border-bottom: none;
+}
+/* =============================================
+   MOBILE RESPONSIVE - Day Tables
+   ============================================= */
+.pdf-day-card {
+    margin-bottom: 18px;
+    border: 1px solid #E8D5F0;
+    border-radius: 12px;
+    overflow: hidden;
+    page-break-inside: avoid;
+}
+
+.pdf-day-header {
+    background: linear-gradient(90deg, #8B3A9E, #D4547F);
+    color: white;
+    padding: 11px 16px;
+    font-size: 16px;
+    font-weight: 700;
+}
+.pdf-single-day-table {
+    width: 100%;
+    border-collapse: collapse;
+    border: 1px solid #E8D5F0;
+}
+
+.pdf-single-day-table th {
+    background: #F8E8F5;
+    padding: 10px 12px;
+    font-size: 13px;
+    color: #6B2080;
+    text-align: right;
+    border-bottom: 2px solid #D4547F;
+}
+
+.pdf-single-day-table td {
+    padding: 11px 12px;
+    vertical-align: top;
+    font-size: 12.8px;
+    line-height: 1.75;
+    border-bottom: 1px solid #E0C4E8;   /* خط فاصل رمادي وردي فاتح */
+}
+@media (max-width: 640px) {
+    .day-tables-container {
+        gap: 18px;
+    }
+
+    .day-card {
+        border-radius: 12px;
+        margin: 0 -4px; /* لتعويض الهوامش */
+    }
+
+    .day-header {
+        padding: 12px 16px;
+        font-size: 1rem;
+    }
+
+    .single-day-table th {
+        padding: 10px 12px;
+        font-size: 0.8rem;
+    }
+
+    .single-day-table td {
+        padding: 6px 10px;
+    }
+
+    .meal-lbl {
+        font-size: 0.82rem;
+        padding: 10px 8px;
+    }
+
+    .single-day-table textarea {
+        min-height: 130px !important;
+        font-size: 0.88rem;
+        padding: 10px 12px;
+        line-height: 1.75;
+    }
+
+    /* تحسين عرض الجدول على الموبايل */
+    .single-day-table {
+        font-size: 0.85rem;
+    }
+
+    .np-bar {
+        padding: 12px 14px;
+    }
+
+    .pg-head {
+        padding: 0 4px;
+    }
+}
+
+/* تحسين إضافي للشاشات الصغيرة جداً */
+@media (max-width: 380px) {
+    .single-day-table textarea {
+        min-height: 120px;
+        font-size: 0.85rem;
+    }
+    
+    .day-header {
+        font-size: 0.95rem;
+        padding: 11px 14px;
+    }
+  }

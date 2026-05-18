@@ -388,33 +388,52 @@ function confirmDelete() {
 
 /* ─── NUTRITION PLAN TABLE ─── */
 function buildPlanTable() {
-    const body = document.getElementById("planBody");
-    body.innerHTML = "";
-    MEALS.forEach((m) => {
-        const tr = document.createElement("tr");
-        if (m.isSnack) tr.classList.add("meal-snack");
-        let html = `<td class="row-lbl">${m.label}</td>`;
-        DAYS.forEach((day) => {
-            html += `<td><textarea placeholder="" id="cell_${m.id}_${day}"></textarea></td>`;
-        });
-        tr.innerHTML = html;
-        body.appendChild(tr);
+    const container = document.getElementById("planTablesContainer");
+    container.innerHTML = "";
+
+    DAYS.forEach((day, index) => {
+        const cardHTML = `
+            <div class="day-card">
+                <div class="day-header">
+                    <span class="day-title">${day}</span>
+                </div>
+                <table class="single-day-table">
+                    <thead>
+                        <tr>
+                            <th class="meal-col">الوجبة</th>
+                            <th class="content-col">البرنامج الغذائي</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${MEALS.map(meal => `
+                            <tr class="${meal.isSnack ? 'meal-snack' : ''}">
+                                <td class="meal-lbl">${meal.label}</td>
+                                <td>
+                                    <textarea id="cell_${meal.id}_${day}" 
+                                        placeholder="اكتبي الوجبة هنا..."></textarea>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+        container.innerHTML += cardHTML;
     });
 }
-
 function getPlanData() {
     const d = {};
     MEALS.forEach((m) => {
         d[m.id] = {};
         DAYS.forEach((day) => {
             const el = document.getElementById(`cell_${m.id}_${day}`);
-            d[m.id][day] = el ? el.value : "";
+            d[m.id][day] = el ? el.value.trim() : "";
         });
     });
-    d._inst = document.getElementById("npInst").value;
-    d._allowed = document.getElementById("npAllowed").value;
-    d._forbidden = document.getElementById("npForbidden").value;
-    d._name = document.getElementById("npNameIn").value;
+    d._inst = document.getElementById("npInst").value.trim();
+    d._allowed = document.getElementById("npAllowed").value.trim();
+    d._forbidden = document.getElementById("npForbidden").value.trim();
+    d._name = document.getElementById("npNameIn").value.trim();
     d._date = document.getElementById("npDate").value;
     return d;
 }
@@ -429,7 +448,7 @@ function setPlanData(d) {
     });
     const safe = (id, v) => {
         const el = document.getElementById(id);
-        if (el && v) el.value = v;
+        if (el && v !== undefined) el.value = v;
     };
     safe("npInst", d._inst);
     safe("npAllowed", d._allowed);
@@ -462,90 +481,144 @@ function clearPlan() {
         DAYS.forEach((day) => {
             const el = document.getElementById(`cell_${m.id}_${day}`);
             if (el) el.value = "";
-        }),
+        })
     );
     ["npInst", "npAllowed", "npForbidden"].forEach((id) => {
         const el = document.getElementById(id);
         if (el) el.value = "";
     });
+    toast("تم مسح البرنامج");
 }
-
 /* ─── PDF EXPORT ─── */
 
 function exportPDF() {
     savePlan();
     const d = getPlanData();
     const target = document.getElementById('pdfTarget');
-    toast('⏳ جاري التصدير بالحل النهائي... يا رب!');
+    toast('⏳ جاري إعداد التصدير...');
 
-    // وظيفة عبقرية: تغليف كل كلمة بـ span له هامش لمنع الالتصاق نهائياً
     const fixAr = (str) => {
         if (!str || str.trim() === '') return '—';
-        return str.trim().split(/\s+/).map(word =>
-            `<span style="display:inline-block; margin-left:4px;">${word}</span>`
+        let clean = str.trim()
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/([\u0600-\u06FF])(\d)/g, '$1 $2')
+            .replace(/(\d)([\u0600-\u06FF])/g, '$1 $2')
+            .replace(/([^\s+])\+([^\s+])/g, '$1 + $2')
+            .replace(/([،.:؛])([^\s])/g, '$1 $2')
+            .replace(/\s+/g, ' ');
+
+        const lines = clean.split('\n').map(line =>
+            `<div style="direction:rtl; unicode-bidi:isolate; text-align:right; line-height:1.85;">${line || '&nbsp;'}</div>`
         ).join('');
+        return `<div style="direction:rtl; text-align:right; width:100%;">${lines}</div>`;
     };
 
-    let rowsHtml = '';
-    MEALS.forEach(meal => {
-        rowsHtml += `<tr>
-            <td style="background:#F3E5F5; font-weight:bold; color:#8B3A9E; width:15%; border:1px solid #ddd; font-size:11px;">${meal.label}</td>`;
-        DAYS.forEach(day => {
-            const val = (d[meal.id] && d[meal.id][day]) ? d[meal.id][day] : '';
-            rowsHtml += `<td style="border:1px solid #ddd; font-size:10px; padding:8px; line-height:1.6;">${fixAr(val)}</td>`;
+    // مجموعات الأيام
+    const dayGroups = [
+        ["السبت", "الأحد"],
+        ["الاثنين", "الثلاثاء"],
+        ["الأربعاء", "الخميس"],
+        ["الجمعة"]
+    ];
+
+    let daysHTML = '';
+
+    dayGroups.forEach(group => {
+        let groupHTML = `<div class="pdf-group">`;
+        let hasContentInGroup = false;
+
+        group.forEach(day => {
+            let rowsHTML = '';
+            let hasContentInDay = false;
+
+            MEALS.forEach(meal => {
+                const content = (d[meal.id] && d[meal.id][day]) ? d[meal.id][day].trim() : '';
+                
+                // إخفاء الصف إذا كان فارغاً
+                if (content === '') return;
+
+                hasContentInDay = true;
+                hasContentInGroup = true;
+
+                rowsHTML += `
+                    <tr class="${meal.isSnack ? 'meal-snack' : ''}">
+                        <td class="pdf-meal">${meal.label}</td>
+                        <td class="pdf-content">${fixAr(content)}</td>
+                    </tr>`;
+            });
+
+            // إضافة اليوم فقط إذا كان فيه محتوى
+            if (hasContentInDay) {
+                groupHTML += `
+                    <div class="pdf-day-card">
+                        <div class="pdf-day-header">${day}</div>
+                        <table class="pdf-single-day-table">
+                            <thead>
+                                <tr>
+                                    <th class="pdf-meal-col">الوجبة</th>
+                                    <th class="pdf-content-col">المحتوى</th>
+                                </tr>
+                            </thead>
+                            <tbody>${rowsHTML}</tbody>
+                        </table>
+                    </div>`;
+            }
         });
-        rowsHtml += `</tr>`;
+
+        groupHTML += `</div>`;
+        if (hasContentInGroup) {
+            daysHTML += groupHTML;
+        }
     });
 
+    const patientName = d._name ? d._name.trim() : "مريض";
+
     const pdfTemplate = `
-        <div class="pdf-page" style="direction:rtl; text-align:right; font-family:'Tajawal', sans-serif; padding:15mm; background:white;">
+        <div class="pdf-page" style="direction:rtl; font-family:'Tajawal', sans-serif; padding:8mm 10mm 10mm; background:white; line-height:1.6;">
             
-            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:4px solid #E8739A; padding-bottom:15px; margin-bottom:25px;">
-                <div style="flex:2">
-                    <h1 style="color:#8B3A9E; margin:0; font-size:26px; white-space:nowrap;">${fixAr("عيادة التغذية")}</h1>
-                    <p style="margin:5px 0; color:#D4547F; font-weight:900; font-size:18px;">${fixAr("الدكتورة صبا وليد الزعبي")}</p>
+            <!-- Header -->
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:4px solid #E8739A; padding-bottom:10px; margin-bottom:15px;">
+                <div>
+                    <h1 style="color:#8B3A9E; margin:0; font-size:23px;">عيادة التغذية</h1>
+                    <p style="margin:3px 0 0; color:#D4547F; font-weight:800; font-size:16px;">الدكتورة صبا وليد الزعبي</p>
                 </div>
-                <div style="text-align:left; font-size:12px; color:#666; flex:1" dir="ltr">
+                <div style="text-align:left; font-size:12.5px; color:#444; line-height:1.5;" dir="ltr">
                     sebaalzoubi03@gmail.com<br>0982720825
                 </div>
             </div>
 
-            <table style="width:100%; border-collapse:collapse; margin-bottom:25px; background:#FFF5F9; border:1px solid #F8C8DC; border-radius:12px;">
+            <!-- Patient Info -->
+            <table style="width:100%; margin-bottom:20px; background:#FFF5F9; border:1px solid #F8C8DC; border-radius:10px; font-size:13px;">
                 <tr>
-                    <td style="padding:15px; font-size:13px;"><b style="color:#8B3A9E;">${fixAr(":الاسم")}</b> ${fixAr(d._name)}</td>
-                    <td style="padding:15px; font-size:13px;"><b style="color:#8B3A9E;">${fixAr(":التاريخ")}</b> ${fixAr(new Date().toLocaleDateString('ar-SA'))}</td>
-                    <td style="padding:15px; font-size:13px;"><b style="color:#8B3A9E;">${fixAr(":الهدف")}</b><span style="display:inline-block; margin-right:10px;">${fixAr(document.getElementById('fTargetWeight')?.value ? document.getElementById('fTargetWeight').value + ' KG' : '')}</span></td>
+                    <td style="padding:10px 14px;"><b>الاسم:</b> ${fixAr(patientName)}</td>
+                    <td style="padding:10px 14px;"><b>التاريخ:</b> ${new Date().toLocaleDateString('ar-SA')}</td>
+                    <td style="padding:10px 14px;"><b>الهدف:</b> ${document.getElementById('fTargetWeight')?.value ? document.getElementById('fTargetWeight').value + ' كجم' : '—'}</td>
                 </tr>
             </table>
 
-            <div style="color:#8B3A9E; border-right:6px solid #E8739A; padding-right:12px; font-weight:900; margin-bottom:15px; font-size:18px;">
-                ${fixAr("البرنامج الغذائي الأسبوعي")}
+            <div style="font-size:18px; font-weight:800; color:#8B3A9E; margin:18px 0 16px; border-right:5px solid #E8739A; padding-right:12px;">
+                البرنامج الغذائي الأسبوعي
             </div>
-            
-            <table style="width:100%; border-collapse:collapse; margin-bottom:25px; table-layout:fixed; border:1px solid #ddd;">
-                <thead>
-                    <tr style="background:#8B3A9E; color:white;">
-                        <th style="padding:10px; border:1px solid #8B3A9E; font-size:12px; width:14%;">الوجبة</th>
-                        ${DAYS.map(day => `<th style="padding:10px; border:1px solid #8B3A9E; font-size:11px;">${day}</th>`).join('')}
-                    </tr>
-                </thead>
-                <tbody>${rowsHtml}</tbody>
-            </table>
 
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+            ${daysHTML}
+
+            <!-- Allowed / Forbidden + Instructions -->
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:25px;">
                 <div>
-                    <div style="color:#8B3A9E; border-right:5px solid #E8739A; padding-right:10px; font-weight:bold; margin-bottom:8px; font-size:15px;">${fixAr("المسموحات")}</div>
-                    <div style="background:#fdfdfd; border:1px solid #eee; padding:15px; border-radius:10px; min-height:80px; font-size:12px; line-height:1.8;">${fixAr(d._allowed)}</div>
+                    <div style="color:#8B3A9E; font-weight:700; margin-bottom:7px;">المسموحات</div>
+                    <div style="background:#fdfdfd; border:1px solid #ddd; padding:12px; border-radius:10px; font-size:12.5px;">${fixAr(d._allowed)}</div>
                 </div>
                 <div>
-                    <div style="color:#8B3A9E; border-right:5px solid #666; padding-right:10px; font-weight:bold; margin-bottom:8px; font-size:15px;">${fixAr("الممنوعات")}</div>
-                    <div style="background:#fdfdfd; border:1px solid #eee; padding:15px; border-radius:10px; min-height:80px; font-size:12px; line-height:1.8;">${fixAr(d._forbidden)}</div>
+                    <div style="color:#8B3A9E; font-weight:700; margin-bottom:7px;">الممنوعات</div>
+                    <div style="background:#fdfdfd; border:1px solid #ddd; padding:12px; border-radius:10px; font-size:12.5px;">${fixAr(d._forbidden)}</div>
                 </div>
             </div>
 
-            <div style="margin-top:25px;">
-                <div style="color:#8B3A9E; border-right:5px solid #E8739A; padding-right:10px; font-weight:bold; margin-bottom:8px; font-size:15px;">${fixAr("تعليمات إضافية")}</div>
-                <div style="background:#fdfdfd; border:1px solid #eee; padding:15px; border-radius:10px; font-size:12px; line-height:1.8;">${fixAr(d._inst)}</div>
+            <div style="margin-top:22px;">
+                <div style="color:#8B3A9E; font-weight:700; margin-bottom:7px;">تعليمات إضافية</div>
+                <div style="background:#fdfdfd; border:1px solid #ddd; padding:12px; border-radius:10px; font-size:12.5px;">${fixAr(d._inst)}</div>
             </div>
         </div>
     `;
@@ -553,28 +626,20 @@ function exportPDF() {
     target.innerHTML = pdfTemplate;
     target.style.display = 'block';
 
+    // اسم الملف بناءً على اسم المريض
+    const fileName = patientName.replace(/[^a-zA-Z0-9\u0600-\u06FF\s]/g, '_').replace(/\s+/g, '_');
+
     html2pdf().set({
-        margin: 5,
-        filename: `Glowia_Plan_${d._name || 'Client'}.pdf`,
-        image: {
-            type: 'jpeg',
-            quality: 1
-        },
-        html2canvas: {
-            scale: 3,
-            useCORS: true,
-            letterRendering: false
-        },
-        jsPDF: {
-            unit: 'mm',
-            format: 'a4',
-            orientation: 'portrait'
-        }
+        margin: [5, 6, 6, 6],
+        filename: `Glowia_Plan_${fileName}.pdf`,
+        html2canvas: { scale: 3, useCORS: true, letterRendering: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     }).from(target).save().then(() => {
         target.style.display = 'none';
-        toast('✅ تم بنجاح! تم حفظ البرنامج الغذائي كملف PDF');
+        toast('✅ تم تصدير PDF باسم المريضة بنجاح');
     });
 }
+
 /* ─── HELPERS ─── */
 function uid() {
     return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
