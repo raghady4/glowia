@@ -606,7 +606,7 @@
   <!-- /body-area -->
 
   <!-- ── MOBILE NAV ── -->
-  <nav class="mobile-nav" id="mobileNav">
+ <nav class="mobile-nav" id="mobileNav">
     <button class="mob-nav-item active" data-page="dashboard" onclick="navTo('dashboard',this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
@@ -643,12 +643,8 @@
     </button>
   </nav>
 </div>
-<!-- /shell -->
-
-<!-- TOAST -->
 <div class="toast" id="toast"></div>
 
-<!-- DIALOG: تأكيد الحذف -->
 <div class="overlay" id="delOverlay">
   <div class="dialog">
     <div class="dialog-icon">
@@ -662,14 +658,13 @@
     <p>هل أنتِ متأكدة من حذف بيانات هذا المريض؟<br/>لا يمكن التراجع عن هذا الإجراء.</p>
     <div class="dialog-acts">
       <button class="btn btn-ghost" onclick="closeDialog()">إلغاء</button>
-      <button class="btn btn-danger" onclick="confirmDelete()">تأكيد الحذف</button>
-    </div>
+      <button class="btn btn-danger" onclick="confirmDelete()">تأكيد الحذف</button>     </div>
   </div>
 </div>
 
-<!-- منطقة PDF المخفية -->
-<div id="pdfTarget"></div>
+<div id="pdfTarget" style="position: absolute; left: -9999px; top: -9999px; width: 210mm; display: none;"></div>
 
 <script src="script.js"></script>
+
 </body>
 </html>
