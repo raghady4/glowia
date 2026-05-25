@@ -703,22 +703,20 @@ function exportPatientReport() {
       </div>
     </div>`;
 
-  const target = document.getElementById("pdfTarget");
-  target.innerHTML = reportHTML;
-  target.style.display = "block";
-
-  const fileName = d.name.replace(/[^a-zA-Z0-9\u0600-\u06FF\s]/g, "_").replace(/\s+/g, "_");
+  // 1. نقوم بتثبيت عرض العنصر برمجياً ليطابق مقاس الـ CSS تماماً قبل التقاط الصورة
+const target = document.getElementById('pdfTarget'); // أو العنصر الخاص بك
+target.style.width = "210mm"; 
 
 html2pdf().set({
     margin: [8, 10, 10, 10],
     filename: `Glowia_Report_${fileName}.pdf`,
     html2canvas: { 
-        scale: 3,
+        scale: 3,          // دقة ممتازة للطباعة
         useCORS: true,
         letterRendering: true,
-        // إزالة العرض الثابت هنا وتحديد الخصائص أدناه لمنع الانزياح
-        scrollX: 0,
-        scrollY: 0
+        scrollX: 0,        // كفيل بحل مشكلة الإنزياح الناتجة عن الـ RTL
+        scrollY: 0,
+        windowWidth: 794   // 794 بكسل هو المعادل الدقيق لـ 210mm عند دقة الشاشة العادية
     },
     jsPDF: { 
         unit: "mm", 
@@ -726,6 +724,7 @@ html2pdf().set({
         orientation: "portrait" 
     }
 }).from(target).save().then(() => {
+    // إعادة العنصر لحالته الطبيعية بعد الحفظ إذا كنت تخفيه
     target.style.display = "none";
     toast("✅ تم تصدير تقرير المريض بنجاح");
 });
