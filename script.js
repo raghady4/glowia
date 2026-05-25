@@ -709,25 +709,26 @@ function exportPatientReport() {
 
   const fileName = d.name.replace(/[^a-zA-Z0-9\u0600-\u06FF\s]/g, "_").replace(/\s+/g, "_");
 
-  html2pdf().set({
+html2pdf().set({
     margin: [8, 10, 10, 10],
     filename: `Glowia_Report_${fileName}.pdf`,
     html2canvas: { 
-      scale: 3,
-      useCORS: true,
-      letterRendering: true,
-      width: 1000,
-      windowWidth: 1000
+        scale: 3,
+        useCORS: true,
+        letterRendering: true,
+        // إزالة العرض الثابت هنا وتحديد الخصائص أدناه لمنع الانزياح
+        scrollX: 0,
+        scrollY: 0
     },
     jsPDF: { 
-      unit: "mm", 
-      format: "a4", 
-      orientation: "portrait" 
+        unit: "mm", 
+        format: "a4", 
+        orientation: "portrait" 
     }
-  }).from(target).save().then(() => {
+}).from(target).save().then(() => {
     target.style.display = "none";
     toast("✅ تم تصدير تقرير المريض بنجاح");
-  });
+});
 }
 /* ═══════════════════════════════════════════════════════════
    دوال مساعدة
