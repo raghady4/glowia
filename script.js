@@ -417,7 +417,7 @@ function clearPlan() {
   toast("تم مسح البرنامج");
 }
 /* ═══════════════════════════════════════════════════════════
-   الحل النهائي: تصدير PDF — البرنامج الغذائي الأسبوعي (بدون Grid)
+   المراجعة النهائية: تصدير PDF — البرنامج الغذائي الأسبوعي
 ═══════════════════════════════════════════════════════════ */
 function exportPDF() {
   savePlan();
@@ -475,6 +475,10 @@ function exportPDF() {
   });
 
   const patientName = d._name ? d._name.trim() : "مريض";
+  
+  // تصحيح معرف الوزن المستهدف إلى المعرف الحقيقي ptTargetWeight
+  const targetW = document.getElementById("ptTargetWeight")?.value || "—";
+
   const pdfTemplate = `
     <div style="width: 100%; box-sizing: border-box; direction:rtl; font-family:'Tajawal',sans-serif; padding: 6mm; background:white; line-height:1.6;">
       <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:4px solid #E8739A; padding-bottom:10px; margin-bottom:15px;">
@@ -489,7 +493,7 @@ function exportPDF() {
         <tr>
           <td style="padding:8px 12px; width:33.33%;"><b>الاسم:</b> ${fixAr(patientName)}</td>
           <td style="padding:8px 12px; width:33.33%;"><b>التاريخ:</b> ${new Date().toLocaleDateString("ar-SA")}</td>
-          <td style="padding:8px 12px; width:33.33%;"><b>الهدف:</b> ${document.getElementById("fTargetWeight")?.value ? document.getElementById("fTargetWeight").value + " كجم" : "—"}</td>
+          <td style="padding:8px 12px; width:33.33%;"><b>الهدف:</b> ${targetW !== "—" ? targetW + " كجم" : "—"}</td>
         </tr>
       </table>
       
@@ -519,10 +523,12 @@ function exportPDF() {
 }
 
 /* ═══════════════════════════════════════════════════════════
-   الحل النهائي: تصدير PDF — تقرير المؤشرات الجسدية (بدون Grid)
+   المراجعة النهائية: تصدير PDF — تقرير المؤشرات الجسدية
 ═══════════════════════════════════════════════════════════ */
 function exportPatientReport() {
-  const d = readFm();
+  // تصحيح استدعاء الدالة الحقيقية من كودك المصدري readForm بدلاً من readFm
+  const d = readForm(); 
+  
   if (!d.name) {
     toast("يرجى إدخال اسم المريض أولاً", true);
     return;
@@ -589,7 +595,7 @@ function exportPatientReport() {
           </td>
           <td style="width:25%; background: #fff5f9; border: 1px solid #f8c8dc; border-radius: 8px; padding: 10px 4px; text-align: center; vertical-align: top;">
             <div style="font-size: 15px; font-weight: 800; color: #8b3a9e;">${val(d.muscles)}<span style="font-size: 10px; color: #9878a8;"> كجم</span></div>
-            <div style="font-size: 11px; color: #503060; font-weight: 600; margin-top: 3px;">العضلات الإجمالية</div>
+            <div style="font-size: 11px; color: #503060; font-weight: 600; margin-top: 3px;">العسال الإجمالية</div>
           </td>
         </tr>
       </table>
@@ -660,40 +666,37 @@ function exportPatientReport() {
 }
 
 /* ═══════════════════════════════════════════════════════════
-   دالة المعالجة المركزية الفائقة المستقرة (المصلحة تماماً للـ DOM)
+   دالة المعالجة المركزية الذكية (تمنع الصفحة البيضاء تماماً)
 ═══════════════════════════════════════════════════════════ */
 function executePDFExport(htmlString, fileName, successMsg) {
   try {
-    // 1. إنشاء حاوية وهمية في الذاكرة
+    // 1. إنشاء الحاوية المؤقتة
     const tempContainer = document.createElement('div');
     tempContainer.innerHTML = htmlString;
     
-    // 2. ضبط أبعاد مطلقة وآمنة متوافقة مع الطباعة بدون أي إخفاء بـ display:none
+    // 2. استخدام طريقة "الإزاحة المضمونة" بدلاً من الشفافية المنخفضة لضمان رندرة الخطوط في الهواتف
     Object.assign(tempContainer.style, {
-      position: 'fixed',
+      position: 'absolute',
       top: '0',
-      left: '0',
-      width: '190mm', // عرض مدروس لترك هوامش أمان للمتصفحات والهواتف
+      left: '-10000px', // نقلها بالكامل بعيداً عن الشاشة دون إخفاء مظهرها الرسومي
+      width: '195mm',   // عرض آمن جداً ومدروس لصفحات الـ A4 لمنع الالتفاف والقص
       padding: '0',
       margin: '0',
-      zIndex: '-9999',
-      opacity: '0.02', // شفافية منخفضة جداً تجعلها مرئية تماماً لمحرك الالتقاط ومخفية عن عيون المستخدم
-      pointerEvents: 'none',
-      background: 'white'
+      background: 'white',
+      boxSizing: 'border-box'
     });
 
-    // 3. إدراجها في جسم الصفحة مؤقتاً
     document.body.appendChild(tempContainer);
 
-    // 4. الانتظار قليلاً لتهيئة الخطوط والجداول ثم التصدير الفوري بالـ Promises
+    // 3. تأخير بسيط جداً للسماح للمتصفح ببناء شجرة الرندرة بالكامل
     setTimeout(() => {
       html2pdf().set({
-        margin: [12, 12, 12, 12],
+        margin: [10, 10, 10, 10],
         filename: fileName,
-        image: { type: 'jpeg', quality: 0.98 },
+        image: { type: 'jpeg', quality: 0.95 }, // استخدام جودة عالية متزنة لمنع انهيار الذاكرة (Crash)
         pagebreak: { mode: ['avoid-all', 'css'] },
         html2canvas: { 
-          scale: 2, // دقة 2 مثالية وعالية ومحمية بالكامل من امتلاء الذاكرة أو الشاشة البيضاء
+          scale: 2, 
           useCORS: true,
           letterRendering: true,
           logging: false
@@ -704,7 +707,7 @@ function executePDFExport(htmlString, fileName, successMsg) {
       .save()
       .then(() => {
         if (document.body.contains(tempContainer)) {
-          document.body.removeChild(tempContainer); // تنظيف الصفحة فوراً بعد التحميل
+          document.body.removeChild(tempContainer); // تنظيف الذاكرة فوراً
         }
         toast(successMsg);
       })
@@ -713,13 +716,13 @@ function executePDFExport(htmlString, fileName, successMsg) {
         if (document.body.contains(tempContainer)) {
           document.body.removeChild(tempContainer);
         }
-        toast("❌ حدث خطأ داخلي أثناء حفظ الملف", true);
+        toast("❌ حدث خطأ داخلي أثناء تصدير الملف", true);
       });
-    }, 400);
+    }, 350);
 
   } catch (e) {
     console.error("Global Export Crash: ", e);
-    toast("❌ فشل تشغيل محرك التصدير", true);
+    toast("❌ فشل تشغيل محرك التصدير"، true);
   }
 }
 /* ═══════════════════════════════════════════════════════════
