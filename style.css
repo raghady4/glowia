@@ -2204,3 +2204,54 @@ body.printing-mode #pdfTarget {
     padding: 11px 14px;
   }
 }
+@media print {
+    /* 1. إعادة تعيين أبعاد الصفحة والجسم لضمان ظهور المحتوى وعدم انهياره */
+    html, body {
+        height: auto !important;
+        min-height: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: visible !important;
+        background-color: #fff !important;
+        -webkit-print-color-adjust: exact !important; /* للحفاظ على الألوان والخلفيات */
+        print-color-adjust: exact !important;
+    }
+
+    /* 2. تحويل الـ Flexbox المنهار إلى تخطيط كتلي عادي أثناء الطباعة إذا لزم الأمر */
+    /* (إذا كان الجدول أو العناصر الرئيسية تختفي بسبب الـ flex) */
+    .main-container, .content-wrapper {
+        display: block !important;
+        height: auto !important;
+    }
+
+    /* 3. معالجة الجداول لضمان عدم انكسارها أو اختفائها */
+    table {
+        page-break-inside: auto !important;
+        width: 100% !important;
+    }
+    
+    tr {
+        page-break-inside: avoid !important;
+        page-break-after: auto !important;
+    }
+
+    /* 4. إخفاء أي عناصر غير ضرورية للطباعة قد تسبب مساحات بيضاء زائدة */
+    .no-print, buttons, nav, footer {
+        display: none !important;
+    }
+}
+.rpt-page {
+    direction: rtl !important;
+    text-align: right !important;
+    padding: 40px 35px 40px 45px !important;   /* زيادة padding من اليسار */
+    box-sizing: border-box;
+}
+
+.rpt-page * {
+    direction: rtl !important;
+}
+
+/* للجداول والـ grids */
+.rpt-metrics-grid, .rpt-section-title {
+    page-break-inside: avoid;
+}
