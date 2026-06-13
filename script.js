@@ -552,6 +552,7 @@ function exportPDF() {
 ═══════════════════════════════════════════════════════════ */
 function exportPatientReport() {
    
+  /* 1. تجميع البيانات */
   const d = readFm();
   if (!d.name) {
     toast("يرجى إدخال اسم المريض أولاً", true);
@@ -561,97 +562,87 @@ function exportPatientReport() {
   if (editId) savePatient();
   toast("⏳ جاري إعداد تقرير المريض...");
 
-  const fixAr = (str) => {
-    if (!str || str.trim() === "") return "—";
-    return str.trim()
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/([،.:؛])([^\s])/g, "$1 $2"); // إضافة مسافة بعد علامات الترقيم
-  };
+  /* 2. دوال مساعدة */
+  const val = (v, unit = "") => 
+    (v !== "" && v !== null && v !== undefined) ? `${v}${unit ? " " + unit : ""}` : "—";
 
-  /* دالة عرض القيم */
- const val = (v, unit = "") => {
-    if (v === "" || v === null || v === undefined) return "—";
-    // استخدام bdi و dir="ltr" يجبر المتصفح على قراءة الرقم والوحدة معاً بشكل صحيح دون عكس النقطتين
-    return `<bdi dir="ltr" style="unicode-bidi: isolate;">${v}${unit ? " " + unit : ""}</bdi>`;
-  };
+  const date = new Date().toLocaleDateString("ar-SA", { 
+    year: "numeric", 
+    month: "long", 
+    day: "numeric" 
+  });
 
-  const date = new Date().toLocaleDateString("ar-SA", { year: "numeric", month: "long", day: "numeric" });
+  /* 3. HTML التقرير المُحسّن */
   const reportHTML = `
-    <div class="rpt-page" style="width:1000px; min-width:1000px; max-width:1000px; margin:0 auto; padding:30px 40px; box-sizing:border-box; background:white; direction:rtl; font-family:'Tajawal',Tahoma,sans-serif; line-height:1.7;">
-
+    <div class="rpt-page" style="direction:rtl; font-family:'Tajawal',Tahoma,sans-serif; text-align:right; line-height:1.6;">
+      
       <!-- رأس التقرير -->
-      <div class="rpt-header" style="display:flex; align-items:center; justify-content:space-between; border-bottom:3px solid transparent; border-image:linear-gradient(90deg,#6b2080,#e8739a) 1; padding-bottom:14px; margin-bottom:20px;">
-        <div class="rpt-header-contact" style="font-size:10.5px; color:#7b6b8d; text-align:left; direction:ltr; line-height:1.7;">
+      <div class="rpt-header">
+        <div class="rpt-header-logo-ring">G</div>
+        <div class="rpt-header-center">
+          <div class="rpt-clinic-name">عيادة التغذية — Glowia Clinic</div>
+          <div class="rpt-doctor-name">الدكتورة صبا وليد الزعبي — أخصائية التغذية</div>
+        </div>
+        <div class="rpt-header-contact" dir="ltr">
           sebaalzoubi03@gmail.com<br/>0982720825
         </div>
-        
-        <div class="rpt-header-center" style="text-align:center; flex:1; padding:0 16px;">
-          <div class="rpt-clinic-name" style="font-size:20px; font-weight:900; color:#6b2080;"> عيادة التغذية</div>
-          <div class="rpt-doctor-name" style="font-size:13px; color:#d4547f; font-weight:700; margin-top:3px;">الدكتورة صبا وليد الزعبي — أخصائية التغذية</div>
-        </div>
-
       </div>
 
       <!-- عنوان التقرير -->
-      <div class="rpt-report-title" style="text-align:center;font-family: 'Tajawal', Tahoma, sans-serif; margin-bottom:18px; font-size:15px; font-weight:800; color:#fff; background:linear-gradient(90deg,#8b3a9e,#e8739a); border-radius:8px; padding:10px 20px;">
-        تقرير المؤشرات الجسدية والقياسات
-      </div>
+      <div class="rpt-report-title">تقرير المؤشرات الجسدية والقياسات</div>
 
       <!-- بيانات المريض -->
-      <div class="rpt-patient-card" style="background:linear-gradient(90deg,#fff5f9,#edd9f5); border:1px solid #f0d0e8; border-radius:12px; padding:14px 18px; margin-bottom:20px; display:grid; grid-template-columns:repeat(3,1fr); gap:12px;">
-        <div class="rpt-patient-field" style="font-size:12.5px;">الاسم <span style="font-weight:700; color:#6b2080;">${val(d.name)}</span></div>
-        <div class="rpt-patient-field" style="font-size:12.5px;">تاريخ التقرير <span style="font-weight:700; color:#6b2080;">${date}</span></div>
-        <div class="rpt-patient-field" style="font-size:12.5px;">الوزن المستهدف <span style="font-weight:700; color:#6b2080;">${val(d.targetWeight, "كجم")}</span></div>
+      <div class="rpt-patient-card">
+        <div class="rpt-patient-field">الاسم: <span>${val(d.name)}</span></div>
+        <div class="rpt-patient-field">تاريخ التقرير: <span>${date}</span></div>
+        <div class="rpt-patient-field">الوزن المستهدف: <span>${val(d.targetWeight, "كجم")}</span></div>
       </div>
 
       <!-- المؤشرات الجسدية الرئيسية -->
-      <div class="rpt-section-title" style="font-size:14px; font-weight:800; color:#8b3a9e; border-right:5px solid #e8739a; padding-right:11px; margin:22px 0 12px;">المؤشرات الجسدية الرئيسية</div>
-      <div class="rpt-metrics-grid" style="display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:16px;">
-        <div class="rpt-metric-card" style="background:#fff5f9; border:1px solid #f8c8dc; border-radius:10px; padding:12px 10px; text-align:center;">
-          <div class="rpt-metric-val" style="font-size:18px; font-weight:800; color:#8b3a9e;">${val(d.weight)}<span class="rpt-metric-unit" style="font-size:10px; color:#9878a8;"> كجم</span></div>
-          <div class="rpt-metric-lbl" style="font-size:11px; color:#503060; font-weight:600; margin-top:4px;">الوزن الحالي</div>
+      <div class="rpt-section-title">المؤشرات الجسدية الرئيسية</div>
+      <div class="rpt-metrics-grid">
+        <div class="rpt-metric-card">
+          <div class="rpt-metric-val">${val(d.weight)}<span class="rpt-metric-unit"> كجم</span></div>
+          <div class="rpt-metric-lbl">الوزن الحالي</div>
         </div>
-        <div class="rpt-metric-card" style="background:#fff5f9; border:1px solid #f8c8dc; border-radius:10px; padding:12px 10px; text-align:center;">
-          <div class="rpt-metric-val" style="font-size:18px; font-weight:800; color:#8b3a9e;">${val(d.height)}<span class="rpt-metric-unit" style="font-size:10px; color:#9878a8;"> سم</span></div>
-          <div class="rpt-metric-lbl" style="font-size:11px; color:#503060; font-weight:600; margin-top:4px;">الطول</div>
+        <div class="rpt-metric-card">
+          <div class="rpt-metric-val">${val(d.height)}<span class="rpt-metric-unit"> سم</span></div>
+          <div class="rpt-metric-lbl">الطول</div>
         </div>
-        <div class="rpt-metric-card" style="background:#fff5f9; border:1px solid #f8c8dc; border-radius:10px; padding:12px 10px; text-align:center;">
-          <div class="rpt-metric-val" style="font-size:18px; font-weight:800; color:#8b3a9e;">${val(d.age)}</div>
-          <div class="rpt-metric-lbl" style="font-size:11px; color:#503060; font-weight:600; margin-top:4px;">العمر الزمني</div>
+        <div class="rpt-metric-card">
+          <div class="rpt-metric-val">${val(d.age)}</div>
+          <div class="rpt-metric-lbl">العمر الزمني</div>
         </div>
-        <div class="rpt-metric-card" style="background:#fff5f9; border:1px solid #f8c8dc; border-radius:10px; padding:12px 10px; text-align:center;">
-          <div class="rpt-metric-val" style="font-size:18px; font-weight:800; color:#8b3a9e;">${val(d.bioAge)}</div>
-          <div class="rpt-metric-lbl" style="font-size:11px; color:#503060; font-weight:600; margin-top:4px;">العمر البيولوجي</div>
+        <div class="rpt-metric-card">
+          <div class="rpt-metric-val">${val(d.bioAge)}</div>
+          <div class="rpt-metric-lbl">العمر البيولوجي</div>
         </div>
-        <div class="rpt-metric-card" style="background:#fff5f9; border:1px solid #f8c8dc; border-radius:10px; padding:12px 10px; text-align:center;">
-          <div class="rpt-metric-val" style="font-size:18px; font-weight:800; color:#d4547f;">${val(d.bmi || d.bmi)}</div>
-          <div class="rpt-metric-lbl" style="font-size:11px; color:#503060; font-weight:600; margin-top:4px;">مؤشر كتلة الجسم (BMI)</div>
+        <div class="rpt-metric-card">
+          <div class="rpt-metric-val" style="color:#d4547f">${val(d.bmi)}</div>
+          <div class="rpt-metric-lbl">مؤشر كتلة الجسم (BMI)</div>
         </div>
-        <div class="rpt-metric-card" style="background:#fff5f9; border:1px solid #f8c8dc; border-radius:10px; padding:12px 10px; text-align:center;">
-          <div class="rpt-metric-val" style="font-size:13px; padding-top:4px; color:#444;">${val(d.bmiNote || d.bmiNote)}</div>
-          <div class="rpt-metric-lbl" style="font-size:11px; color:#503060; font-weight:600; margin-top:4px;">تصنيف مؤشر كتلة الجسم</div>
+        <div class="rpt-metric-card">
+          <div class="rpt-metric-val" style="font-size:13px;padding-top:4px;">${val(d.bmiNote)}</div>
+          <div class="rpt-metric-lbl">تصنيف مؤشر كتلة الجسم</div>
         </div>
-        <div class="rpt-metric-card" style="background:#fff5f9; border:1px solid #f8c8dc; border-radius:10px; padding:12px 10px; text-align:center;">
-          <div class="rpt-metric-val" style="font-size:18px; font-weight:800; color:#8b3a9e;">${val(d.fat)}<span class="rpt-metric-unit" style="font-size:10px; color:#9878a8;"> كجم</span></div>
-          <div class="rpt-metric-lbl" style="font-size:11px; color:#503060; font-weight:600; margin-top:4px;">الدهون الكلية</div>
+        <div class="rpt-metric-card">
+          <div class="rpt-metric-val">${val(d.fat)}<span class="rpt-metric-unit"> كجم</span></div>
+          <div class="rpt-metric-lbl">الدهون الكلية</div>
         </div>
-        <div class="rpt-metric-card" style="background:#fff5f9; border:1px solid #f8c8dc; border-radius:10px; padding:12px 10px; text-align:center;">
-          <div class="rpt-metric-val" style="font-size:18px; font-weight:800; color:#8b3a9e;">${val(d.muscles)}<span class="rpt-metric-unit" style="font-size:10px; color:#9878a8;"> كجم</span></div>
-          <div class="rpt-metric-lbl" style="font-size:11px; color:#503060; font-weight:600; margin-top:4px;">العضلات الإجمالية</div>
+        <div class="rpt-metric-card">
+          <div class="rpt-metric-val">${val(d.muscles)}<span class="rpt-metric-unit"> كجم</span></div>
+          <div class="rpt-metric-lbl">العضلات الإجمالية</div>
         </div>
       </div>
 
       <!-- توزيع العضلات -->
-      <div class="rpt-section-title" style="font-size:14px; font-weight:800; color:#8b3a9e; border-right:5px solid #e8739a; padding-right:11px; margin:22px 0 12px;">توزيع العضلات</div>
-      <div class="rpt-muscles-grid" style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:16px;">
-        <!-- عضلات الذراعين -->
-        <div class="rpt-muscle-block" style="background:linear-gradient(135deg,#edd9f5,#fff5f9); border:1px solid #f0d0e8; border-radius:10px; padding:12px;">
-          <div class="rpt-muscle-title" style="font-size:11.5px; font-weight:700; color:#6b2080; margin-bottom:8px; border-bottom:1px solid #f0d0e8; padding-bottom:6px;">عضلات الذراعين</div>
-          <div class="rpt-muscle-row" style="display:flex; justify-content:space-between; font-size:11px; color:#503060; margin-bottom:4px;"><span>اليمين</span><span style="font-weight:700; color:#8b3a9e;">${val(d.armR, "كجم")}</span></div>
-          <div class="rpt-muscle-row" style="display:flex; justify-content:space-between; font-size:11px; color:#503060; margin-bottom:4px;"><span>اليسار</span><span style="font-weight:700; color:#8b3a9e;">${val(d.armL, "كجم")}</span></div>
-          <div class="rpt-muscle-row" style="display:flex; justify-content:space-between; font-size:11px; color:#503060;"><span>الهدف</span><span style="font-weight:700; color:#8b3a9e;">${val(d.armT, "كجم")}</span></div>
+      <div class="rpt-section-title">توزيع العضلات</div>
+      <ن\div class="rpt-muscles-grid">
+        <div class="rpt-muscle-block">
+          <div class="rpt-muscle-title">عضلات الذراعين</div>
+          <div class="rpt-muscle-row"><span>اليمين</span><span>${val(d.armR, "كجم")}</span></div>
+          <div class="rpt-muscle-row"><span>اليسار</span><span>${val(d.armL, "كجم")}</span></div>
+          <div class="rpt-muscle-row"><span>الهدف</span><span>${val(d.armT, "كجم")}</span></div>
         </div>
         <div class="rpt-muscle-block">
           <div class="rpt-muscle-title">عضلات الساقين</div>
@@ -667,11 +658,11 @@ function exportPatientReport() {
       </div>
 
       <!-- القياسات الجسدية -->
-      <div class="rpt-section-title" style="font-size:14px; font-weight:800; color:#8b3a9e; border-right:5px solid #e8739a; padding-right:11px; margin:22px 0 12px;">القياسات الجسدية</div>
-      <div class="rpt-measures-grid" style="display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin-bottom:16px;">
-        <div class="rpt-measure-card" style="background:#fff; border:1px solid #f0d0e8; border-radius:10px; padding:10px 8px; text-align:center;">
-          <div class="rpt-measure-val" style="font-size:16px; font-weight:800; color:#d4547f;">${val(d.chest)}<span class="rpt-measure-unit" style="font-size:10px; color:#9878a8;"> سم</span></div>
-          <div class="rpt-measure-lbl" style="font-size:10.5px; color:#503060; font-weight:600; margin-top:4px;">الصدر</div>
+      <div class="rpt-section-title">القياسات الجسدية</div>
+      <div class="rpt-measures-grid">
+        <div class="rpt-measure-card">
+          <div class="rpt-measure-val">${val(d.chest)}<span class="rpt-measure-unit"> سم</span></div>
+          <div class="rpt-measure-lbl">الصدر</div>
         </div>
         <div class="rpt-measure-card">
           <div class="rpt-measure-val">${val(d.waist)}<span class="rpt-measure-unit"> سم</span></div>
@@ -691,18 +682,17 @@ function exportPatientReport() {
         </div>
       </div>
 
-
       ${d.notes ? `
-      <div class="rpt-section-title" style="font-size:14px; font-weight:800; color:#8b3a9e; border-right:5px solid #e8739a; padding-right:11px; margin:22px 0 12px;">ملاحظات الدكتورة</div>
-      <div class="rpt-notes-box" style="background:#fffbfd; border:1px solid #f0d0e8; border-radius:10px; padding:14px 16px; font-size:12px; color:#503060; line-height:1.75; white-space:pre-wrap;">${d.notes}</div>` : ""}
+      <!-- ملاحظات الدكتورة -->
+      <!-- صفحة جديدة -->
+      <div style="page-break-before:always;"></div>
+      <div class="rpt-section-title">ملاحظات الدكتورة</div>
+      <div class="rpt-notes-box">${d.notes}</div>` : ""}
 
-      <!-- تذييل -->
-      <div class="rpt-footer" style="margin-top:20px; padding:10px 18px; background:linear-gradient(90deg,#edd9f5,#fde8f0); border-radius:8px; text-align:center; font-size:10px; color:#9878a8; line-height:1.8;">
-        تم إصدار هذا التقرير بواسطة عيادة التغذية<br/>
-        إشراف الدكتورة صبا وليد الزعبي | ${date}
-      </div>
+   
     </div>`;
 
+  /* 4. تصدير PDF */
   const target = document.getElementById("pdfTarget");
   target.innerHTML = reportHTML;
   target.style.display = "block";
@@ -710,20 +700,10 @@ function exportPatientReport() {
   const fileName = d.name.replace(/[^a-zA-Z0-9\u0600-\u06FF\s]/g, "_").replace(/\s+/g, "_");
 
   html2pdf().set({
-    margin: [8, 10, 10, 10],
+    margin: [6, 8, 8, 8],
     filename: `Glowia_Report_${fileName}.pdf`,
-    html2canvas: { 
-      scale: 3,
-      useCORS: true,
-      letterRendering: true,
-      width: 1000,
-      windowWidth: 1000
-    },
-    jsPDF: { 
-      unit: "mm", 
-      format: "a4", 
-      orientation: "portrait" 
-    }
+    html2canvas: { scale: 3, useCORS: true, letterRendering: true },
+    jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
   }).from(target).save().then(() => {
     target.style.display = "none";
     toast("✅ تم تصدير تقرير المريض بنجاح");
