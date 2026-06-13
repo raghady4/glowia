@@ -684,12 +684,15 @@ function exportPatientReport() {
 
       ${d.notes ? `
       <!-- ملاحظات الدكتورة -->
-      <!-- صفحة جديدة -->
       <div style="page-break-before:always;"></div>
       <div class="rpt-section-title">ملاحظات الدكتورة</div>
       <div class="rpt-notes-box">${d.notes}</div>` : ""}
 
-   
+      <!-- تذييل -->
+      <div class="rpt-footer">
+        تم إصدار هذا التقرير بواسطة عيادة التغذية — Glowia Clinic<br/>
+        إشراف الدكتورة صبا وليد الزعبي | ${date}
+      </div>
     </div>`;
 
   /* 4. تصدير PDF */

@@ -8,7 +8,7 @@
   --blush-deep: #f8c8dc;
   --blush-card: #fff5f9;
   --rose: #e8739a;
-  --rose-dark: #d4547f;
+  --rose-dark: #d4547f;   
   --rose-light: #f5a8c0;
   --mauve: #8b3a9e;
   --mauve-deep: #6b2080;
@@ -1740,7 +1740,9 @@ body::before {
    PDF — PATIENT METRICS REPORT (new export)
 ═══════════════════════════════════════════════════════════ */
 .rpt-page {
+  width: 210mm; /* تغيير من max-width إلى width ثابت أثناء التصدير */
   max-width: 210mm;
+  box-sizing: border-box; /* تضمن أن البادينج لا يكسر العرض الإجمالي */
   margin: 0 auto;
   font-family: "Tajawal", Tahoma, sans-serif;
   direction: rtl;
