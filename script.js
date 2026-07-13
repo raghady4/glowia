@@ -42,8 +42,9 @@ const FM = {
   bmiNote      : "fBmiNote",
   fat          : "fFat",
   targetWeight : "fTargetWeight",
-  muscles      : "fMuscles",
+  fMuscles : "fMuscles",
   musclesGoal  : "fMusclesGoal",
+  muscles      : "fMuscles",
   legR         : "fLegR",
   legL         : "fLegL",
   legT         : "fLegT",
@@ -837,12 +838,15 @@ function getPlanData() {
   d._inst      = document.getElementById("npInst")?.value||"";
   d._allowed   = document.getElementById("npAllowed")?.value||"";
   d._forbidden = document.getElementById("npForbidden")?.value||"";
-  d._name      = document.getElementById("npNameIn")?.value||"";
   d._date      = document.getElementById("npDate")?.value||"";
-  d._weight    = document.getElementById("npWeight")?.value||"";
-  d._targetW   = document.getElementById("npTargetWeight")?.value||"";
-  d._bmi       = document.getElementById("npBmi")?.value||"";
+  // السعرات فقط تُحفظ من البرنامج
   d._calories  = document.getElementById("npCalories")?.value||"";
+  // بقية البيانات تؤخذ من المريض مباشرة
+  const p=planPtId?patients.find(x=>x.id===planPtId):null;
+  d._name    = p?.name    || document.getElementById("npNameIn")?.value||"";
+  d._weight  = p?.weight  || document.getElementById("npWeight")?.value||"";
+  d._targetW = p?.targetWeight || document.getElementById("npTargetWeight")?.value||"";
+  d._bmi     = p?.bmi     || document.getElementById("npBmi")?.value||"";
   return d;
 }
 
@@ -866,9 +870,12 @@ function loadPlanUI() {
   if (p) {
     setText2("npName",p.name||"—");
     setVal("npNameIn",p.name||"");
-    if (!plans[key]?._weight && p.weight) setVal("npWeight",p.weight);
-    if (!plans[key]?._targetW && p.targetWeight) setVal("npTargetWeight",p.targetWeight);
-    if (!plans[key]?._bmi && p.bmi) setVal("npBmi",p.bmi);
+    // دائماً تُحمَّل من بيانات المريض — لا تُعدَّل إلا من هناك
+    if (p.weight)       setVal("npWeight",p.weight);
+    if (p.targetWeight) setVal("npTargetWeight",p.targetWeight);
+    if (p.bmi)          setVal("npBmi",p.bmi);
+    // السعرات تُحفظ وتُحمَّل من البرنامج فقط
+    if (plans[key]?._calories) setVal("npCalories",plans[key]._calories);
   }
 }
 
@@ -898,31 +905,64 @@ function exportPDF() {
   const target=document.getElementById("pdfTarget");
   toast("⏳ جاري إعداد التصدير...");
 
-  /* ══ الإصلاح النهائي لـ fixAr ══
-     هذه النسخة تعزل الأرقام والرموز بشكل كلي داخل spans من نوع ltr
-     وبالتالي تمنع أي تداخل بين السطور العربية والعملات/الأرقام أثناء تحويلها للصورة
+  /*
+    fixAr — معالجة النص العربي المختلط مع الأرقام للتصدير PDF
+    المشكلة: النص مثل "2 ملعقة جبنة + 3 خبز شوفان"
+    يظهر خطأ كـ "2 ملعقة جبنة 3+ خبز شوفان" بسبب خوارزمية BiDi
+    الحل: نفصل كل وحدة (رقم+وحدة) كـ ltr-isolate ونحتفظ بالنص العربي rtl
   */
 const fixAr = (raw) => {
   if (!raw || raw.trim() === "") return "—";
 
-  let safe = raw.trim()
+  // escape HTML أولاً
+  const esc = (s) => s
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
 
-  // تقسيم النص مع الحفاظ على الأرقام والرموز منفصلة
-  const parts = safe.split(/([0-9٠-٩.,٫٪%+\-x×÷=><\s]+)/g);
-  
-  const spanned = parts.map(part => {
-    if (!part) return "";
-    // إذا كان الجزء يحتوي على أرقام أو رموز رياضية
-    if (/[0-9٠-٩.,٫٪%+\-x×÷=><]/.test(part)) {
-      return `<span dir="ltr" style="direction:ltr; unicode-bidi:bidi-override; display:inline-block;">${part}</span>`;
-    }
-    return `<span dir="rtl" style="unicode-bidi:isolate;">${part}</span>`;
-  }).join("");
+  // نعالج كل سطر على حدة
+  const lines = raw.trim().split(/\n/);
 
-  return `<div dir="rtl" style="direction:rtl; text-align:right; line-height:1.85; white-space:pre-wrap;">${spanned}</div>`;
+  const processedLines = lines.map(line => {
+    if (!line.trim()) return "";
+
+    // نقسّم السطر إلى أجزاء: كل جزء إما نص عربي أو رقم+رمز
+    // نستخدم regex يفصل بين الأرقام والنصوص بدقة
+    const tokens = line.split(/(\s*[+×÷=]\s*|\s*،\s*|\s*,\s*)/);
+
+    const parts = tokens.map(token => {
+      if (!token) return "";
+      const escaped = esc(token);
+
+      // رمز عملية فقط (+، ×، ...) — نعزله في bidi-isolate
+      if (/^[\s]*[+×÷=،,][\s]*$/.test(token)) {
+        return `<span style="display:inline; unicode-bidi:isolate; direction:rtl;">${escaped}</span>`;
+      }
+
+      // جزء يبدأ برقم (مثل "2 ملعقة" أو "3خبز")
+      if (/^\s*\d/.test(token)) {
+        // فصل الرقم عن النص الذي يليه
+        const m = token.match(/^(\s*\d+(?:\.\d+)?)\s*(.*)$/s);
+        if (m) {
+          const num  = esc(m[1].trim());
+          const rest = esc(m[2].trim());
+          if (rest) {
+            return `<span style="unicode-bidi:isolate; direction:ltr; display:inline;">${num}</span>` +
+                   `<span style="unicode-bidi:isolate; direction:rtl; display:inline;"> ${rest}</span>`;
+          }
+          return `<span style="unicode-bidi:isolate; direction:ltr; display:inline;">${num}</span>`;
+        }
+      }
+
+      return `<span style="unicode-bidi:isolate; direction:rtl; display:inline;">${escaped}</span>`;
+    });
+
+    return parts.join("");
+  });
+
+  const body = processedLines.join("<br/>");
+
+  return `<div dir="rtl" style="direction:rtl; text-align:right; line-height:2; font-family:'Tajawal',Arial,sans-serif;">${body}</div>`;
 };
 
   const ptName = d._name?d._name.trim():"مريض";
@@ -944,7 +984,7 @@ const fixAr = (raw) => {
           <div style="font-weight:800;color:#7c3aad;font-size:13px;">${d._targetW||"—"} kg</div>
         </div>
         <div style="text-align:center;background:#fff;border-radius:8px;padding:8px;">
-          <div style="font-size:10px;color:#888;">الـ BMI</div>
+          <div style="font-size:10px;color:#888;"> BMI</div>
           <div style="font-weight:800;color:#7c3aad;font-size:13px;">${d._bmi||"—"}</div>
         </div>
         <div style="text-align:center;background:#fff;border-radius:8px;padding:8px;">
@@ -1029,78 +1069,135 @@ const fixAr = (raw) => {
 function exportPatientReport() {
   const fv = id => document.getElementById(id)?.value||"";
   const d = {
-    name:fv("fName"), targetWeight:fv("fTargetWeight"), weight:fv("fWeight"),
-    height:fv("fHeight"), age:fv("fAge"), bioAge:fv("fBioAge"),
-    bmi:fv("fBmi"), bmiNote:fv("fBmiNote"), fat:fv("fFat"),
-    muscles:fv("fMuscles"), legR:fv("fLegR"), legL:fv("fLegL"), legT:fv("fLegT"),
+    name         : fv("fName"),
+    targetWeight : fv("fTargetWeight"),
+    weight       : fv("fWeight"),
+    height       : fv("fHeight"),
+    age          : fv("fAge"),
+    bioAge       : fv("fBioAge"),
+    bmi          : fv("fBmi"),
+    bmiNote      : fv("fBmiNote"),
+    fat          : fv("fFat"),
+    fMuscles : fv("fMuscles"),
+    musclesGoal  : fv("fMusclesGoal"),
+    muscles      : fv("fMuscles"),
+    legR:fv("fLegR"), legL:fv("fLegL"), legT:fv("fLegT"),
     armR:fv("fArmR"), armL:fv("fArmL"), armT:fv("fArmT"),
-    trunk:fv("fTrunk"), trunkT:fv("fTrunkT"), chest:fv("fChest"),
-    waist:fv("fWaist"), hip:fv("fHip"), lowerAbdomen:fv("fLowerAbdomen"),
-    thighR:fv("fThighR"), thighL:fv("fThighL"), notes:fv("fNotes"),
+    trunk:fv("fTrunk"), trunkT:fv("fTrunkT"),
+    chest:fv("fChest"), waist:fv("fWaist"), hip:fv("fHip"),
+    lowerAbdomen:fv("fLowerAbdomen"),
+    forearmR:fv("fForearmR"), forearmL:fv("fForearmL"),
+    thighR:fv("fThighR"), thighL:fv("fThighL"),
+    notes:fv("fNotes"),
   };
   if (!d.name) { toast("يرجى إدخال اسم المريض أولاً",true); return; }
   const v=(x,u="")=>(x!==""&&x!==null&&x!==undefined)?`${x}${u?" "+u:""}`:"—";
   const date=new Date().toLocaleDateString("ar-SA",{year:"numeric",month:"long",day:"numeric"});
 
+  const bmiClass = () => {
+    if (d.bmiNote) return d.bmiNote;
+    const n = parseFloat(d.bmi);
+    if (!d.bmi || isNaN(n)) return "—";
+    if (n < 18.5) return "نحافة";
+    if (n < 25)   return "طبيعي";
+    if (n < 30)   return "زيادة وزن";
+    return "سمنة";
+  };
+
   const rHTML=`
-  <div dir="rtl" style="direction:rtl;font-family:'Tajawal',Tahoma,sans-serif;text-align:right;background:white;padding:30px 30px 40px 45px;">
-    <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #cc6faa;padding-bottom:12px;margin-bottom:20px;">
-      <div><div style="color:#7c3aad;font-size:21px;font-weight:bold;">عيادة التغذية — Glowia Clinic</div>
-      <div style="color:#b0508e;font-weight:700;font-size:14px;">الدكتورة صبا وليد الزعبي</div></div>
-      <div dir="ltr" style="text-align:left;font-size:12px;color:#555;">sebaalzoubi03@gmail.com<br/>0982720825</div>
+  <div dir="rtl" style="direction:rtl;font-family:'Tajawal',Tahoma,sans-serif;text-align:right;background:white;padding:25px 28px 35px 28px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #cc6faa;padding-bottom:12px;margin-bottom:18px;">
+      <div>
+        <div style="color:#7c3aad;font-size:20px;font-weight:bold;">عيادة التغذية — Glowia Clinic</div>
+        <div style="color:#b0508e;font-weight:700;font-size:13px;">الدكتورة صبا وليد الزعبي</div>
+      </div>
+      <div dir="ltr" style="text-align:left;font-size:11px;color:#555;">sebaalzoubi03@gmail.com<br/>0982720825</div>
     </div>
-    <div style="text-align:center;font-size:18px;font-weight:800;color:#7c3aad;margin-bottom:20px;">تقرير المؤشرات الجسدية</div>
-    <div style="background:#f5e8ff;padding:10px 16px;border-radius:8px;margin-bottom:18px;display:flex;justify-content:space-between;font-size:13.5px;">
-      <div><strong>الاسم:</strong> ${v(d.name)}</div><div><strong>التاريخ:</strong> ${date}</div>
+    <div style="text-align:center;font-size:17px;font-weight:800;color:#7c3aad;margin-bottom:16px;">تقرير المؤشرات الجسدية</div>
+    <div style="background:#f5e8ff;padding:10px 16px;border-radius:8px;margin-bottom:16px;display:flex;justify-content:space-between;font-size:13px;">
+      <div><strong>الاسم:</strong> ${escapeHtml(v(d.name))}</div>
+      <div><strong>التاريخ:</strong> ${date}</div>
     </div>
-    <div style="font-size:14px;font-weight:700;color:#7c3aad;margin-bottom:10px;">المؤشرات الجسدية</div>
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px;">
-      ${[["العمر البيولوجي",v(d.bioAge)],["العمر",v(d.age)],["الطول CM",v(d.height)],["الوزن KG",v(d.weight)]].map(([l,x])=>
+    <div style="font-size:13px;font-weight:700;color:#7c3aad;margin-bottom:8px;">المؤشرات الجسدية</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px;">
+      ${[["العمر البيولوجي",v(d.bioAge)],["العمر",v(d.age)],["الطول",v(d.height,"cm")],["الوزن",v(d.weight,"kg")]].map(([l,x])=>
       `<div style="background:#f0e8fc;border:1px solid #c9a8e8;border-radius:10px;padding:10px;text-align:center;">
-        <div style="font-size:11px;color:#666;">${l}</div>
-        <div style="font-size:20px;font-weight:800;color:#7c3aad;">${x}</div></div>`).join("")}
+        <div style="font-size:10px;color:#666;">${l}</div>
+        <div style="font-size:18px;font-weight:800;color:#7c3aad;">${x}</div></div>`).join("")}
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:18px;">
-      ${[["الوزن المستهدف KG",v(d.targetWeight)],["هدف الدهون KG",v(d.fat)],["هدف العضلات KG",v(d.muscles)]].map(([l,x])=>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">
+      <div style="background:#fdf4ff;border:1.5px solid #c9a8e8;border-radius:10px;padding:10px;text-align:center;">
+        <div style="font-size:10px;color:#666;">BMI</div>
+        <div style="font-size:22px;font-weight:900;color:#7c3aad;">${v(d.bmi)}</div>
+      </div>
+      <div style="background:#fdf4ff;border:1.5px solid #c9a8e8;border-radius:10px;padding:10px;text-align:center;">
+        <div style="font-size:10px;color:#666;">تصنيف BMI</div>
+        <div style="font-size:16px;font-weight:800;color:#b0508e;">${escapeHtml(bmiClass())}</div>
+      </div>
+    </div>
+    <div style="font-size:13px;font-weight:700;color:#7c3aad;margin-bottom:8px;">الأهداف</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:18px;">
+      ${[["الوزن المستهدف",v(d.targetWeight,"kg")],["هدف الدهون",v(d.fat)],["العضلات الإجمالي",v(d.fMuscles)],["هدف العضلات",v(d.musclesGoal,"kg")]].map(([l,x])=>
       `<div style="background:#fff0f8;border:2px solid #cc6faa;border-radius:10px;padding:12px;text-align:center;">
-        <div style="font-size:11px;color:#666;">${l}</div>
-        <div style="font-size:22px;font-weight:900;color:#7c3aad;">${x}</div></div>`).join("")}
+        <div style="font-size:10px;color:#666;">${l}</div>
+        <div style="font-size:20px;font-weight:900;color:#7c3aad;">${x}</div></div>`).join("")}
     </div>
-    <div style="margin:18px 0;">
-      <div style="font-size:14px;font-weight:700;color:#7c3aad;margin-bottom:10px;">تفصيل العضلات</div>
-      <table style="width:100%;border-collapse:collapse;">
+    <div style="margin:14px 0;">
+      <div style="font-size:13px;font-weight:700;color:#7c3aad;margin-bottom:8px;">تفصيل العضلات</div>
+      <table style="width:100%;border-collapse:collapse;font-size:12px;">
         <thead><tr style="background:#cc6faa;color:white;">
-          <th style="padding:10px;">العضلات</th><th style="padding:10px;">اليمين</th><th style="padding:10px;">اليسار</th><th style="padding:10px;">الهدف</th>
+          <th style="padding:9px;text-align:right;">العضلات</th>
+          <th style="padding:9px;text-align:center;">اليمين</th>
+          <th style="padding:9px;text-align:center;">اليسار</th>
+          <th style="padding:9px;text-align:center;">الهدف</th>
         </tr></thead>
         <tbody>
-          <tr><td style="padding:10px;font-weight:600;border-bottom:1px solid #eee;">الذراعين</td><td style="padding:10px;text-align:center;border-bottom:1px solid #eee;">${v(d.armR,"كجم")}</td><td style="padding:10px;text-align:center;border-bottom:1px solid #eee;">${v(d.armL,"كجم")}</td><td style="padding:10px;text-align:center;color:#7c3aad;font-weight:700;">${v(d.armT,"كجم")}</td></tr>
-          <tr><td style="padding:10px;font-weight:600;border-bottom:1px solid #eee;">الساقين</td><td style="padding:10px;text-align:center;border-bottom:1px solid #eee;">${v(d.legR,"كجم")}</td><td style="padding:10px;text-align:center;border-bottom:1px solid #eee;">${v(d.legL,"كجم")}</td><td style="padding:10px;text-align:center;color:#7c3aad;font-weight:700;">${v(d.legT,"كجم")}</td></tr>
-          <tr><td style="padding:10px;font-weight:600;">الجذع</td><td style="padding:10px;text-align:center;">${v(d.trunk,"كجم")}</td><td style="padding:10px;text-align:center;">—</td><td style="padding:10px;text-align:center;color:#7c3aad;font-weight:700;">${v(d.trunkT,"كجم")}</td></tr>
+          <tr style="border-bottom:1px solid #eee;">
+            <td style="padding:9px;font-weight:600;">الساقين</td>
+            <td style="padding:9px;text-align:center;">${v(d.legR,"كجم")}</td>
+            <td style="padding:9px;text-align:center;">${v(d.legL,"كجم")}</td>
+            <td style="padding:9px;text-align:center;color:#7c3aad;font-weight:700;">${v(d.legT,"كجم")}</td>
+          </tr>
+          <tr style="border-bottom:1px solid #eee;">
+            <td style="padding:9px;font-weight:600;">الذراعين</td>
+            <td style="padding:9px;text-align:center;">${v(d.armR,"كجم")}</td>
+            <td style="padding:9px;text-align:center;">${v(d.armL,"كجم")}</td>
+            <td style="padding:9px;text-align:center;color:#7c3aad;font-weight:700;">${v(d.armT,"كجم")}</td>
+          </tr>
+
+          <tr>
+            <td style="padding:9px;font-weight:600;">الجذع</td>
+            <td style="padding:18px;text-align:center;">${v(d.trunk,"كجم")}</td>
+            <td style="padding:9px;text-align:center;">—</td>
+            <td style="padding:9px;text-align:center;color:#7c3aad;font-weight:700;">${v(d.trunkT,"كجم")}</td>
+          </tr>
         </tbody>
       </table>
     </div>
+    <div style="font-size:13px;font-weight:700;color:#7c3aad;margin-bottom:8px;">القياسات</div>
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:18px;">
-      ${[["الصدر","cm",d.chest],["الخصر","cm",d.waist],["الورك","cm",d.hip],["البطن السفلي","cm",d.lowerAbdomen],["الفخذ يمين","cm",d.thighR],["الفخذ يسار","cm",d.thighL]].map(([l,u,x])=>
-      `<div style="background:#f5e8ff;border:1px solid #c9a8e8;border-radius:10px;padding:10px;text-align:center;">
+      ${[["الصدر","cm",d.chest],["الخصر","cm",d.waist],["الورك","cm",d.hip],["البطن السفلي","cm",d.lowerAbdomen],["الزند يمين","cm",d.forearmR],["الزند يسار","cm",d.forearmL],["الفخذ يمين","cm",d.thighR],["الفخذ يسار","cm",d.thighL]].map(([l,u,x])=>
+      `<div style="background:#f5e8ff;border:1px solid #c9a8e8;border-radius:10px;padding:9px;text-align:center;">
         <div style="font-size:10px;color:#888;">${l} (${u})</div>
-        <div style="font-size:16px;font-weight:800;color:#b0508e;">${v(x)}</div></div>`).join("")}
+        <div style="font-size:15px;font-weight:800;color:#b0508e;">${v(x)}</div></div>`).join("")}
     </div>
     <div style="page-break-before:always;">
-    ${d.notes?`<div style="margin-bottom:20px;"><div style="font-size:14px;font-weight:700;color:#7c3aad;margin-bottom:10px;">ملاحظات الدكتورة</div>
-      <div style="border:1.5px solid #cc6faa;border-radius:12px;padding:16px;min-height:80px;white-space:pre-wrap;font-size:13px;">${escapeHtml(d.notes)}</div></div>`:""}
-    <div style="margin-top:25px;">
-      <div style="font-size:14px;font-weight:700;color:#7c3aad;margin-bottom:10px;">ملاحظات الكوتش</div>
-      <div style="border:2px dashed #7c3aad;border-radius:12px;padding:25px;min-height:180px;background:#f9f9f9;"></div>
+    ${d.notes?`<div style="margin-bottom:16px;">
+      <div style="font-size:13px;font-weight:700;color:#7c3aad;margin-bottom:8px;">ملاحظات الدكتورة</div>
+      <div style="border:1.5px solid #cc6faa;border-radius:12px;padding:14px;min-height:70px;white-space:pre-wrap;font-size:12px;">${escapeHtml(d.notes)}</div>
+    </div>`:""}
+    <div style="margin-top:20px;">
+      <div style="font-size:13px;font-weight:700;color:#7c3aad;margin-bottom:8px;">ملاحظات الكوتش</div>
+      <div style="border:2px dashed #7c3aad;border-radius:12px;padding:22px;min-height:150px;background:#f9f9f9;"></div>
     </div>
-    <div style="text-align:center;margin-top:25px;font-size:10px;color:#888;">تم إصدار هذا التقرير بواسطة Glowia Clinic</div>
-    </div>
+    <div style="text-align:center;margin-top:20px;font-size:10px;color:#888;">تم إصدار هذا التقرير بواسطة Glowia Clinic</div>
   </div>`;
 
   const target=document.getElementById("pdfTarget");
   target.innerHTML=rHTML; target.style.display="block";
   const fn=d.name.replace(/[^a-zA-Z0-9\u0600-\u06FF\s]/g,"_").replace(/\s+/g,"_");
   html2pdf().set({
-    margin:[12,12,15,20], filename:`Glowia_Report_${fn}.pdf`,
+    margin:[10,10,12,10], filename:`Glowia_Report_${fn}.pdf`,
     html2canvas:{scale:3,useCORS:true,letterRendering:true},
     jsPDF:{unit:"mm",format:"a4",orientation:"portrait"}
   }).from(target).save().then(()=>{ target.style.display="none"; toast("✅ تم تصدير التقرير بنجاح"); });
