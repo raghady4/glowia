@@ -90,11 +90,62 @@ function load() {
   try { sessions = JSON.parse(localStorage.getItem(SSK) || "[]"); } catch { sessions=[]; }
   try { monthly  = JSON.parse(localStorage.getItem(SMK) || "{}"); } catch { monthly={}; }
 }
-function saveAll()       { localStorage.setItem(SK,  JSON.stringify(patients)); }
-function savePlanStore() { localStorage.setItem(SPK, JSON.stringify(plans));    }
-function saveSessions()  { localStorage.setItem(SSK, JSON.stringify(sessions)); }
-function saveMonthly()   { localStorage.setItem(SMK, JSON.stringify(monthly));  }
+// استبدلي دالة saveAll الحالية بهذا الشكل الأنيق:
+function saveAll() {
+  // الحفظ المحلي المعتاد
+  localStorage.setItem(SK, JSON.stringify(patients));
+  
+  // الرفع التلقائي الموحد والآمن إلى السحابة
+  autoSyncPush();
+}
 
+function savePlanStore() { 
+  localStorage.setItem(SPK, JSON.stringify(plans)); 
+  autoSyncPush(); 
+}
+function saveSessions() { 
+  localStorage.setItem(SSK, JSON.stringify(sessions)); 
+  autoSyncPush(); 
+}
+function saveMonthly() { 
+  localStorage.setItem(SMK, JSON.stringify(monthly)); 
+  autoSyncPush(); 
+}
+
+// دالة الرفع التلقائي الصامتة في الخلفية فور حفظ أي تغيير
+function autoSyncPush() {
+  const savedCfg = localStorage.getItem(SYK);
+  if (!savedCfg) return; // إذا لم تكن مفاتيح المزامنة مدخلة، لا تفعل شيئاً
+
+  try {
+    const cfg = JSON.parse(savedCfg);
+    if (cfg.apiKey && cfg.binId) {
+      // إرسال البيانات بشكل صامت ودون تعطيل الأزرار أو الواجهة
+      fetch(`https://api.jsonbin.io/v3/b/${cfg.binId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Master-Key": cfg.apiKey
+        },
+        body: JSON.stringify({ patients, plans, sessions, monthly })
+      })
+      .then(res => {
+        if (res.ok) {
+          console.log("☁️ تم تحديث البيانات السحابية تلقائياً بنجاح.");
+          // تحديث توقيت آخر مزامنة على الواجهة إذا كانت شاشة المزامنة مفتوحة
+          const now = new Date().toISOString();
+          cfg.lastSync = now;
+          localStorage.setItem(SYK, JSON.stringify(cfg));
+          const el = document.getElementById("syncLastTime");
+          if (el) el.textContent = fmtDateTime(now);
+        }
+      })
+      .catch(err => console.warn("تعذرت المزامنة التلقائية حالياً (قد لا يتوفر اتصال بالإنترنت):", err));
+    }
+  } catch (e) {
+    console.error("خطأ في قراءة إعدادات المزامنة:", e);
+  }
+}
 /* ════════════════════════════════════════
    التنقل
 ════════════════════════════════════════ */
@@ -1484,29 +1535,66 @@ async function syncPush() {
 }
 
 async function syncPull() {
-  const apiKey=document.getElementById("syncApiKey")?.value.trim();
-  const binId =document.getElementById("syncBinId")?.value.trim();
-  if(!apiKey||!binId){toast("يرجى إدخال Master Key و Bin ID",true);return;}
-  if(!confirm("سيتم استبدال جميع البيانات الحالية. هل تريدين المتابعة؟"))return;
-  const btn=document.getElementById("syncPullBtn"); const oh=btn?.innerHTML;
-  if(btn){btn.disabled=true;btn.innerHTML="جارِ التنزيل...";}
-  try{
-    const res=await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`,{headers:{"X-Master-Key":apiKey}});
-    if(!res.ok)throw new Error("HTTP "+res.status);
-    const data=await res.json(); const r=data.record||{};
-    patients=Array.isArray(r.patients)?r.patients:[];
-    plans=r.plans&&typeof r.plans==="object"?r.plans:{};
-    sessions=Array.isArray(r.sessions)?r.sessions:[];
-    monthly=r.monthly&&typeof r.monthly==="object"?r.monthly:{};
-    saveAll();savePlanStore();saveSessions();saveMonthly();
-    const cfg={apiKey,binId,lastSync:new Date().toISOString()};
-    saveSyncCfg(cfg); setText2("syncLastTime",fmtDateTime(cfg.lastSync));
-    render();renderSessionsTable();populateSessionPatientList();
-    toast("✅ تم تنزيل البيانات بنجاح");
-  }catch{toast("تعذّر التنزيل، تحقّقي من Master Key و Bin ID",true);}
-  finally{if(btn){btn.disabled=false;btn.innerHTML=oh;}}
+  const apiKey = document.getElementById("syncApiKey")?.value.trim();
+  const binId  = document.getElementById("syncBinId")?.value.trim();
+  if(!apiKey || !binId) { toast("يرجى إدخال Master Key و Bin ID", true); return; }
+  
+  const btn = document.getElementById("syncPullBtn"); const oh = btn?.innerHTML;
+  if(btn) { btn.disabled = true; btn.innerHTML = "جارِ التنزيل والدمج..."; }
+  
+  try {
+    const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
+      headers: { "X-Master-Key": apiKey }
+    });
+    if(!res.ok) throw new Error("HTTP " + res.status);
+    const data = await res.json(); const r = data.record || {};
+    
+    const cloudPatients = Array.isArray(r.patients) ? r.patients : [];
+    
+    // دمج المرضى: نستخدم الخريطة للتأكد من دمج المريض الجديد تلقائياً
+    const localPatientsMap = new Map(patients.map(p => [p.id || p.name, p]));
+    
+    cloudPatients.forEach(cp => {
+      const key = cp.id || cp.name;
+      const lp = localPatientsMap.get(key);
+      
+      if (!lp) {
+        // مريض جديد تماماً قادم من اللابتوب -> يتم إضافته مباشرة للجوال
+        localPatientsMap.set(key, cp);
+      } else {
+        // إذا كان المريض موجوداً في الطرفين، ندمج بياناته لضمان عدم ضياع أي تعديل
+        localPatientsMap.set(key, { ...lp, ...cp });
+      }
+    });
+    
+    patients = Array.from(localPatientsMap.values());
+    
+    // دمج الخطط الغذائية، الجلسات، والقياسات الشهرية
+    plans    = r.plans && typeof r.plans === "object" ? { ...plans, ...r.plans } : plans;
+    
+    const cloudSessions = Array.isArray(r.sessions) ? r.sessions : [];
+    sessions = [...new Map([...sessions, ...cloudSessions].map(s => [s.id || s.date, s])).values()];
+    
+    monthly  = r.monthly && typeof r.monthly === "object" ? { ...monthly, ...r.monthly } : monthly;
+    
+    // حفظ البيانات محلياً وإعادة تشغيل الواجهة
+    saveAll(); savePlanStore(); saveSessions(); saveMonthly();
+    
+    const cfg = { apiKey, binId, lastSync: new Date().toISOString() };
+    saveSyncCfg(cfg); 
+    if(document.getElementById("syncLastTime")) {
+      setText2("syncLastTime", fmtDateTime(cfg.lastSync));
+    }
+    
+    render(); renderSessionsTable(); populateSessionPatientList();
+    toast("✅ تم تنزيل ودمج البيانات بنجاح");
+  } catch (err) {
+    console.error(err);
+    toast("تعذّر التنزيل، تحقّقي من الاتصال أو المفاتيح", true);
+  } finally {
+    if(btn) { btn.disabled = false; btn.innerHTML = oh; }
+  }
 }
-
 function uid() { return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
 function initials(n) { if(!n)return"؟"; const p=n.trim().split(" "); return p.length>=2?p[0][0]+p[1][0]:p[0][0]||"؟"; }
 function fmtDate(iso)     { if(!iso)return"—"; try{return new Date(iso).toLocaleDateString("ar-SA",{year:"numeric",month:"short",day:"numeric"});}catch{return"—";} }
