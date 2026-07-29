@@ -113,26 +113,32 @@ function saveMonthly() {
 }
 
 // دالة الرفع التلقائي الصامتة في الخلفية فور حفظ أي تغيير
+// دالة الرفع التلقائي السحابي الموحدة
 function autoSyncPush() {
   const savedCfg = localStorage.getItem(SYK);
-  if (!savedCfg) return; // إذا لم تكن مفاتيح المزامنة مدخلة، لا تفعل شيئاً
+  if (!savedCfg) return;
 
   try {
     const cfg = JSON.parse(savedCfg);
     if (cfg.apiKey && cfg.binId) {
-      // إرسال البيانات بشكل صامت ودون تعطيل الأزرار أو الواجهة
+      // تجهيز الكائن الشامل للبيانات
+      const payload = {
+        patients: JSON.parse(localStorage.getItem(SK) || "[]"),
+        plans: JSON.parse(localStorage.getItem(SPK) || "{}"),
+        sessions: JSON.parse(localStorage.getItem(SSK) || "[]"),
+        monthly: JSON.parse(localStorage.getItem(SMK) || "{}")
+      };
+
       fetch(`https://api.jsonbin.io/v3/b/${cfg.binId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
           "X-Master-Key": cfg.apiKey
         },
-        body: JSON.stringify({ patients, plans, sessions, monthly })
+        body: JSON.stringify(payload)
       })
       .then(res => {
         if (res.ok) {
-          console.log("☁️ تم تحديث البيانات السحابية تلقائياً بنجاح.");
-          // تحديث توقيت آخر مزامنة على الواجهة إذا كانت شاشة المزامنة مفتوحة
           const now = new Date().toISOString();
           cfg.lastSync = now;
           localStorage.setItem(SYK, JSON.stringify(cfg));
@@ -140,7 +146,7 @@ function autoSyncPush() {
           if (el) el.textContent = fmtDateTime(now);
         }
       })
-      .catch(err => console.warn("تعذرت المزامنة التلقائية حالياً (قد لا يتوفر اتصال بالإنترنت):", err));
+      .catch(err => console.warn("تعذرت المزامنة التلقائية:", err));
     }
   } catch (e) {
     console.error("خطأ في قراءة إعدادات المزامنة:", e);
@@ -1534,65 +1540,61 @@ async function syncPush() {
   finally{if(btn){btn.disabled=false;btn.innerHTML=oh;}}
 }
 
+// دالة جلب البيانات من السحابة مع فك تغليف record الخاص بـ JSONBin
 async function syncPull() {
-  const apiKey = document.getElementById("syncApiKey")?.value.trim();
-  const binId  = document.getElementById("syncBinId")?.value.trim();
-  if(!apiKey || !binId) { toast("يرجى إدخال Master Key و Bin ID", true); return; }
-  
-  const btn = document.getElementById("syncPullBtn"); const oh = btn?.innerHTML;
-  if(btn) { btn.disabled = true; btn.innerHTML = "جارِ التنزيل والدمج..."; }
-  
+  const savedCfg = localStorage.getItem(SYK);
+  if (!savedCfg) {
+    toast("يرجى إدخال إعدادات المزامنة أولاً", true);
+    return;
+  }
+
+  const cfg = JSON.parse(savedCfg);
+  if (!cfg.apiKey || !cfg.binId) {
+    toast("يرجى التأكد من إدخال Master Key و Bin ID", true);
+    return;
+  }
+
+  const pullBtn = document.getElementById("syncPullBtn");
+  if (pullBtn) pullBtn.disabled = true;
+
   try {
-    const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
-      headers: { "X-Master-Key": apiKey }
-    });
-    if(!res.ok) throw new Error("HTTP " + res.status);
-    const data = await res.json(); const r = data.record || {};
-    
-    const cloudPatients = Array.isArray(r.patients) ? r.patients : [];
-    
-    // دمج المرضى: نستخدم الخريطة للتأكد من دمج المريض الجديد تلقائياً
-    const localPatientsMap = new Map(patients.map(p => [p.id || p.name, p]));
-    
-    cloudPatients.forEach(cp => {
-      const key = cp.id || cp.name;
-      const lp = localPatientsMap.get(key);
-      
-      if (!lp) {
-        // مريض جديد تماماً قادم من اللابتوب -> يتم إضافته مباشرة للجوال
-        localPatientsMap.set(key, cp);
-      } else {
-        // إذا كان المريض موجوداً في الطرفين، ندمج بياناته لضمان عدم ضياع أي تعديل
-        localPatientsMap.set(key, { ...lp, ...cp });
+    const res = await fetch(`https://api.jsonbin.io/v3/b/${cfg.binId}/latest`, {
+      method: "GET",
+      headers: {
+        "X-Master-Key": cfg.apiKey
       }
     });
-    
-    patients = Array.from(localPatientsMap.values());
-    
-    // دمج الخطط الغذائية، الجلسات، والقياسات الشهرية
-    plans    = r.plans && typeof r.plans === "object" ? { ...plans, ...r.plans } : plans;
-    
-    const cloudSessions = Array.isArray(r.sessions) ? r.sessions : [];
-    sessions = [...new Map([...sessions, ...cloudSessions].map(s => [s.id || s.date, s])).values()];
-    
-    monthly  = r.monthly && typeof r.monthly === "object" ? { ...monthly, ...r.monthly } : monthly;
-    
-    // حفظ البيانات محلياً وإعادة تشغيل الواجهة
-    saveAll(); savePlanStore(); saveSessions(); saveMonthly();
-    
-    const cfg = { apiKey, binId, lastSync: new Date().toISOString() };
-    saveSyncCfg(cfg); 
-    if(document.getElementById("syncLastTime")) {
-      setText2("syncLastTime", fmtDateTime(cfg.lastSync));
+
+    if (!res.ok) throw new Error("فشل الاتصال بالسحابة أو مفتاح غير صحيح");
+
+    const jsonResult = await res.json();
+    // فك التغليف: JSONBin يحفظ البيانات داخل الكائن record
+    const data = jsonResult.record || jsonResult;
+
+    if (data) {
+      if (data.patients) localStorage.setItem(SK, JSON.stringify(data.patients));
+      if (data.plans)    localStorage.setItem(SPK, JSON.stringify(data.plans));
+      if (data.sessions) localStorage.setItem(SSK, JSON.stringify(data.sessions));
+      if (data.monthly)  localStorage.setItem(SMK, JSON.stringify(data.monthly));
+
+      // إعادة تحميل المتغيرات بالذاكرة المحلية
+      load();
+      render();
+      
+      const now = new Date().toISOString();
+      cfg.lastSync = now;
+      localStorage.setItem(SYK, JSON.stringify(cfg));
+      
+      const el = document.getElementById("syncLastTime");
+      if (el) el.textContent = fmtDateTime(now);
+
+      toast("تم تنزيل البيانات بنجاح ✅");
     }
-    
-    render(); renderSessionsTable(); populateSessionPatientList();
-    toast("✅ تم تنزيل ودمج البيانات بنجاح");
   } catch (err) {
     console.error(err);
-    toast("تعذّر التنزيل، تحقّقي من الاتصال أو المفاتيح", true);
+    toast("حدث خطأ أثناء تنزيل البيانات: " + err.message, true);
   } finally {
-    if(btn) { btn.disabled = false; btn.innerHTML = oh; }
+    if (pullBtn) pullBtn.disabled = false;
   }
 }
 function uid() { return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
