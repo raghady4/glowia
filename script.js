@@ -72,6 +72,50 @@ function init() {
   buildPlanTable();
   setDate();
   render();
+  // سحب تلقائي صامت عند فتح التطبيق إذا كانت المزامنة مفعّلة
+  silentPullOnStartup();
+}
+
+async function silentPullOnStartup() {
+  const savedCfgRaw = localStorage.getItem(SYK);
+  if (!savedCfgRaw) return;
+  let cfg;
+  try { cfg = JSON.parse(savedCfgRaw); } catch { return; }
+  if (!cfg.apiKey || !cfg.binId) return;
+
+  try {
+    const res = await fetch(`https://api.jsonbin.io/v3/b/${cfg.binId}/latest`, {
+      headers: { "X-Master-Key": cfg.apiKey }
+    });
+    if (!res.ok) return; // فشل صامت — ما نزعج المستخدم عند الفتح
+
+    const jsonResult = await res.json();
+    const data = jsonResult.record || jsonResult;
+    if (!data) return;
+
+    // قارن وقت السحابة بآخر مزامنة محلية
+    const cloudTime    = data.savedAt ? new Date(data.savedAt).getTime() : 0;
+    const lastSyncTime = cfg.lastSync  ? new Date(cfg.lastSync).getTime()  : 0;
+
+    // فقط اسحب إذا كانت السحابة أحدث من آخر مزامنة
+    if (cloudTime <= lastSyncTime) return;
+
+    if (data.patients) localStorage.setItem(SK,  JSON.stringify(data.patients));
+    if (data.plans)    localStorage.setItem(SPK, JSON.stringify(data.plans));
+    if (data.sessions) localStorage.setItem(SSK, JSON.stringify(data.sessions));
+    if (data.monthly)  localStorage.setItem(SMK, JSON.stringify(data.monthly));
+
+    load();
+    render();
+
+    cfg.lastSync = new Date().toISOString();
+    localStorage.setItem(SYK, JSON.stringify(cfg));
+
+    // أبلغ المستخدمة بهدوء أن البيانات تحدّثت
+    setTimeout(() => toast("🔄 تم تحديث البيانات من السحابة تلقائياً"), 800);
+  } catch {
+    // فشل صامت — الشبكة مقطوعة أو غير متاحة
+  }
 }
 
 function setDate() {
@@ -91,67 +135,12 @@ function load() {
   try { monthly  = JSON.parse(localStorage.getItem(SMK) || "{}"); } catch { monthly={}; }
 }
 // استبدلي دالة saveAll الحالية بهذا الشكل الأنيق:
-function saveAll() {
-  // الحفظ المحلي المعتاد
-  localStorage.setItem(SK, JSON.stringify(patients));
-  
-  // الرفع التلقائي الموحد والآمن إلى السحابة
-  autoSyncPush();
-}
+function saveAll()      { localStorage.setItem(SK,  JSON.stringify(patients)); }
+function savePlanStore(){ localStorage.setItem(SPK, JSON.stringify(plans));    }
+function saveSessions() { localStorage.setItem(SSK, JSON.stringify(sessions)); }
+function saveMonthly()  { localStorage.setItem(SMK, JSON.stringify(monthly));  }
 
-function savePlanStore() { 
-  localStorage.setItem(SPK, JSON.stringify(plans)); 
-  autoSyncPush(); 
-}
-function saveSessions() { 
-  localStorage.setItem(SSK, JSON.stringify(sessions)); 
-  autoSyncPush(); 
-}
-function saveMonthly() { 
-  localStorage.setItem(SMK, JSON.stringify(monthly)); 
-  autoSyncPush(); 
-}
-
-// دالة الرفع التلقائي الصامتة في الخلفية فور حفظ أي تغيير
-// دالة الرفع التلقائي السحابي الموحدة
-function autoSyncPush() {
-  const savedCfg = localStorage.getItem(SYK);
-  if (!savedCfg) return;
-
-  try {
-    const cfg = JSON.parse(savedCfg);
-    if (cfg.apiKey && cfg.binId) {
-      // تجهيز الكائن الشامل للبيانات
-      const payload = {
-        patients: JSON.parse(localStorage.getItem(SK) || "[]"),
-        plans: JSON.parse(localStorage.getItem(SPK) || "{}"),
-        sessions: JSON.parse(localStorage.getItem(SSK) || "[]"),
-        monthly: JSON.parse(localStorage.getItem(SMK) || "{}")
-      };
-
-      fetch(`https://api.jsonbin.io/v3/b/${cfg.binId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Master-Key": cfg.apiKey
-        },
-        body: JSON.stringify(payload)
-      })
-      .then(res => {
-        if (res.ok) {
-          const now = new Date().toISOString();
-          cfg.lastSync = now;
-          localStorage.setItem(SYK, JSON.stringify(cfg));
-          const el = document.getElementById("syncLastTime");
-          if (el) el.textContent = fmtDateTime(now);
-        }
-      })
-      .catch(err => console.warn("تعذرت المزامنة التلقائية:", err));
-    }
-  } catch (e) {
-    console.error("خطأ في قراءة إعدادات المزامنة:", e);
-  }
-}
+// تم إيقاف autoSyncPush التلقائي — الرفع الآن يدوي فقط لمنع تعارض البيانات
 /* ════════════════════════════════════════
    التنقل
 ════════════════════════════════════════ */
@@ -1520,10 +1509,14 @@ function toggleSyncKeyVisibility() {
 }
 
 async function syncPush() {
-  const apiKey=document.getElementById("syncApiKey")?.value.trim();
-  let   binId =document.getElementById("syncBinId")?.value.trim();
+  // اقرأ من الـ input أولاً، وإن كان فارغاً خذ القيمة المحفوظة في localStorage
+  const _savedCfgRaw = localStorage.getItem(SYK);
+  const _savedCfg = _savedCfgRaw ? JSON.parse(_savedCfgRaw) : {};
+  const apiKey = (document.getElementById("syncApiKey")?.value.trim()) || _savedCfg.apiKey || "";
+  let   binId  = (document.getElementById("syncBinId")?.value.trim())  || _savedCfg.binId  || "";
   if(!apiKey){toast("يرجى إدخال Master Key",true);return;}
-  const payload={patients,plans,sessions,monthly,savedAt:new Date().toISOString()};
+  const pushTime = new Date().toISOString();
+  const payload={patients,plans,sessions,monthly,savedAt:pushTime};
   const btn=document.getElementById("syncPushBtn"); const oh=btn?.innerHTML;
   if(btn){btn.disabled=true;btn.innerHTML="جارِ الرفع...";}
   try{
@@ -1572,6 +1565,18 @@ async function syncPull() {
     const data = jsonResult.record || jsonResult;
 
     if (data) {
+      // دمج ذكي: إذا كانت بيانات السحابة أقدم من البيانات المحلية، لا تطغَ عليها
+      const cloudTime  = data.savedAt ? new Date(data.savedAt).getTime() : 0;
+      const localSyncCfg = (() => { try { return JSON.parse(localStorage.getItem(SYK) || "{}"); } catch { return {}; } })();
+      const lastPushTime = localSyncCfg.lastSync ? new Date(localSyncCfg.lastSync).getTime() : 0;
+
+      // ارفض التنزيل إذا كانت بياناتنا المحلية أحدث من السحابة
+      if (lastPushTime && cloudTime && cloudTime < lastPushTime) {
+        toast("⚠️ البيانات المحلية أحدث من السحابة — لم يتم الاستبدال. ارفع أولاً إذا أردت المزامنة.", true);
+        if (pullBtn) pullBtn.disabled = false;
+        return;
+      }
+
       if (data.patients) localStorage.setItem(SK, JSON.stringify(data.patients));
       if (data.plans)    localStorage.setItem(SPK, JSON.stringify(data.plans));
       if (data.sessions) localStorage.setItem(SSK, JSON.stringify(data.sessions));
