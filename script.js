@@ -81,23 +81,22 @@ async function silentPullOnStartup() {
   if (!savedCfgRaw) return;
   let cfg;
   try { cfg = JSON.parse(savedCfgRaw); } catch { return; }
-  if (!cfg.apiKey || !cfg.binId) return;
+  if (!cfg.apiKey || !cfg.gistId) return;
 
   try {
-    const res = await fetch(`https://api.jsonbin.io/v3/b/${cfg.binId}/latest`, {
-      headers: { "X-Master-Key": cfg.apiKey }
+    const res = await fetch(`https://api.github.com/gists/${cfg.gistId}`, {
+      headers: { "Authorization": `token ${cfg.apiKey}`, "Accept": "application/vnd.github.v3+json" }
     });
-    if (!res.ok) return; // فشل صامت — ما نزعج المستخدم عند الفتح
+    if (!res.ok) return;
 
-    const jsonResult = await res.json();
-    const data = jsonResult.record || jsonResult;
+    const gist = await res.json();
+    const raw = gist.files?.["glowia-data.json"]?.content;
+    if (!raw) return;
+    const data = JSON.parse(raw);
     if (!data) return;
 
-    // قارن وقت السحابة بآخر مزامنة محلية
     const cloudTime    = data.savedAt ? new Date(data.savedAt).getTime() : 0;
     const lastSyncTime = cfg.lastSync  ? new Date(cfg.lastSync).getTime()  : 0;
-
-    // فقط اسحب إذا كانت السحابة أحدث من آخر مزامنة
     if (cloudTime <= lastSyncTime) return;
 
     if (data.patients) localStorage.setItem(SK,  JSON.stringify(data.patients));
@@ -110,11 +109,9 @@ async function silentPullOnStartup() {
 
     cfg.lastSync = new Date().toISOString();
     localStorage.setItem(SYK, JSON.stringify(cfg));
-
-    // أبلغ المستخدمة بهدوء أن البيانات تحدّثت
     setTimeout(() => toast("🔄 تم تحديث البيانات من السحابة تلقائياً"), 800);
   } catch {
-    // فشل صامت — الشبكة مقطوعة أو غير متاحة
+    // فشل صامت
   }
 }
 
@@ -1500,7 +1497,7 @@ function saveSyncCfg(cfg) { localStorage.setItem(SYK,JSON.stringify(cfg)); }
 
 function initSyncUI() {
   const cfg=loadSyncCfg();
-  setVal("syncApiKey",cfg.apiKey||""); setVal("syncBinId",cfg.binId||"");
+  setVal("syncApiKey",cfg.apiKey||""); setVal("syncBinId",cfg.gistId||"");
   setText2("syncLastTime",cfg.lastSync?fmtDateTime(cfg.lastSync):"لم تتم أي مزامنة بعد");
 }
 function toggleSyncKeyVisibility() {
@@ -1509,41 +1506,37 @@ function toggleSyncKeyVisibility() {
 }
 
 async function syncPush() {
-  // اقرأ من الـ input أولاً، وإن كان فارغاً خذ القيمة المحفوظة في localStorage
-  const _savedCfgRaw = localStorage.getItem(SYK);
-  const _savedCfg = _savedCfgRaw ? JSON.parse(_savedCfgRaw) : {};
-  const apiKey = (document.getElementById("syncApiKey")?.value.trim()) || _savedCfg.apiKey || "";
-  let   binId  = (document.getElementById("syncBinId")?.value.trim())  || _savedCfg.binId  || "";
-  if(!apiKey){toast("يرجى إدخال Master Key",true);return;}
+  const _savedCfg = loadSyncCfg();
+  const _inputKey = document.getElementById("syncApiKey")?.value || "";
+  const apiKey = (_inputKey.length > 20 ? _inputKey.trim() : null) || _savedCfg.apiKey || "";
+  let   gistId = (document.getElementById("syncBinId")?.value.trim()) || _savedCfg.gistId || "";
+  if(!apiKey){toast("يرجى إدخال GitHub Token",true);return;}
   const pushTime = new Date().toISOString();
-  const payload={patients,plans,sessions,monthly,savedAt:pushTime};
+  const payload  = {patients,plans,sessions,monthly,savedAt:pushTime};
   const btn=document.getElementById("syncPushBtn"); const oh=btn?.innerHTML;
   if(btn){btn.disabled=true;btn.innerHTML="جارِ الرفع...";}
   try{
+    const headers = {"Authorization":`token ${apiKey}`,"Accept":"application/vnd.github.v3+json","Content-Type":"application/json"};
     let res;
-    if(binId)res=await fetch(`https://api.jsonbin.io/v3/b/${binId}`,{method:"PUT",headers:{"Content-Type":"application/json","X-Master-Key":apiKey},body:JSON.stringify(payload)});
-    else res=await fetch(`https://api.jsonbin.io/v3/b`,{method:"POST",headers:{"Content-Type":"application/json","X-Master-Key":apiKey,"X-Bin-Name":"Glowia Clinic Data"},body:JSON.stringify(payload)});
-    if(!res.ok)throw new Error("HTTP "+res.status);
-    const data=await res.json();
-    if(!binId)binId=data?.metadata?.id||"";
-    const cfg={apiKey,binId,lastSync:new Date().toISOString()};
-    saveSyncCfg(cfg); setVal("syncBinId",binId); setText2("syncLastTime",fmtDateTime(cfg.lastSync));
+    if(gistId){
+      res = await fetch(`https://api.github.com/gists/${gistId}`,{method:"PATCH",headers,body:JSON.stringify({files:{"glowia-data.json":{content:JSON.stringify(payload)}}})});
+    } else {
+      res = await fetch(`https://api.github.com/gists`,{method:"POST",headers,body:JSON.stringify({description:"Glowia Clinic Data",public:false,files:{"glowia-data.json":{content:JSON.stringify(payload)}}})});
+    }
+    if(!res.ok) throw new Error("HTTP "+res.status);
+    const data = await res.json();
+    if(!gistId) gistId = data.id || "";
+    const cfg = {apiKey, gistId, lastSync: new Date().toISOString()};
+    saveSyncCfg(cfg); setVal("syncBinId", gistId); setText2("syncLastTime", fmtDateTime(cfg.lastSync));
     toast("✅ تم رفع البيانات بنجاح");
-  }catch{toast("تعذّر الرفع، تحقّقي من Master Key",true);}
+  }catch(e){toast("تعذّر الرفع: "+e.message,true);}
   finally{if(btn){btn.disabled=false;btn.innerHTML=oh;}}
 }
 
-// دالة جلب البيانات من السحابة مع فك تغليف record الخاص بـ JSONBin
 async function syncPull() {
-  const savedCfg = localStorage.getItem(SYK);
-  if (!savedCfg) {
-    toast("يرجى إدخال إعدادات المزامنة أولاً", true);
-    return;
-  }
-
-  const cfg = JSON.parse(savedCfg);
-  if (!cfg.apiKey || !cfg.binId) {
-    toast("يرجى التأكد من إدخال Master Key و Bin ID", true);
+  const cfg = loadSyncCfg();
+  if (!cfg.apiKey || !cfg.gistId) {
+    toast("يرجى إدخال GitHub Token و Gist ID أولاً", true);
     return;
   }
 
@@ -1551,53 +1544,41 @@ async function syncPull() {
   if (pullBtn) pullBtn.disabled = true;
 
   try {
-    const res = await fetch(`https://api.jsonbin.io/v3/b/${cfg.binId}/latest`, {
-      method: "GET",
-      headers: {
-        "X-Master-Key": cfg.apiKey
-      }
+    const res = await fetch(`https://api.github.com/gists/${cfg.gistId}`, {
+      headers: {"Authorization":`token ${cfg.apiKey}`,"Accept":"application/vnd.github.v3+json"}
     });
+    if (!res.ok) throw new Error("فشل الاتصال — تأكدي من الـ Token والـ Gist ID");
 
-    if (!res.ok) throw new Error("فشل الاتصال بالسحابة أو مفتاح غير صحيح");
+    const gist = await res.json();
+    const raw  = gist.files?.["glowia-data.json"]?.content;
+    if (!raw) throw new Error("الملف غير موجود في الـ Gist");
+    const data = JSON.parse(raw);
 
-    const jsonResult = await res.json();
-    // فك التغليف: JSONBin يحفظ البيانات داخل الكائن record
-    const data = jsonResult.record || jsonResult;
+    const cloudTime    = data.savedAt ? new Date(data.savedAt).getTime() : 0;
+    const lastPushTime = cfg.lastSync  ? new Date(cfg.lastSync).getTime()  : 0;
 
-    if (data) {
-      // دمج ذكي: إذا كانت بيانات السحابة أقدم من البيانات المحلية، لا تطغَ عليها
-      const cloudTime  = data.savedAt ? new Date(data.savedAt).getTime() : 0;
-      const localSyncCfg = (() => { try { return JSON.parse(localStorage.getItem(SYK) || "{}"); } catch { return {}; } })();
-      const lastPushTime = localSyncCfg.lastSync ? new Date(localSyncCfg.lastSync).getTime() : 0;
-
-      // ارفض التنزيل إذا كانت بياناتنا المحلية أحدث من السحابة
-      if (lastPushTime && cloudTime && cloudTime < lastPushTime) {
-        toast("⚠️ البيانات المحلية أحدث من السحابة — لم يتم الاستبدال. ارفع أولاً إذا أردت المزامنة.", true);
-        if (pullBtn) pullBtn.disabled = false;
-        return;
-      }
-
-      if (data.patients) localStorage.setItem(SK, JSON.stringify(data.patients));
-      if (data.plans)    localStorage.setItem(SPK, JSON.stringify(data.plans));
-      if (data.sessions) localStorage.setItem(SSK, JSON.stringify(data.sessions));
-      if (data.monthly)  localStorage.setItem(SMK, JSON.stringify(data.monthly));
-
-      // إعادة تحميل المتغيرات بالذاكرة المحلية
-      load();
-      render();
-      
-      const now = new Date().toISOString();
-      cfg.lastSync = now;
-      localStorage.setItem(SYK, JSON.stringify(cfg));
-      
-      const el = document.getElementById("syncLastTime");
-      if (el) el.textContent = fmtDateTime(now);
-
-      toast("تم تنزيل البيانات بنجاح ✅");
+    if (lastPushTime && cloudTime && cloudTime < lastPushTime) {
+      toast("⚠️ البيانات المحلية أحدث — ارفع أولاً إذا أردت المزامنة.", true);
+      if (pullBtn) pullBtn.disabled = false;
+      return;
     }
+
+    if (data.patients) localStorage.setItem(SK,  JSON.stringify(data.patients));
+    if (data.plans)    localStorage.setItem(SPK, JSON.stringify(data.plans));
+    if (data.sessions) localStorage.setItem(SSK, JSON.stringify(data.sessions));
+    if (data.monthly)  localStorage.setItem(SMK, JSON.stringify(data.monthly));
+
+    load();
+    render();
+
+    const now = new Date().toISOString();
+    cfg.lastSync = now;
+    localStorage.setItem(SYK, JSON.stringify(cfg));
+    const el = document.getElementById("syncLastTime");
+    if (el) el.textContent = fmtDateTime(now);
+    toast("✅ تم تنزيل البيانات بنجاح");
   } catch (err) {
-    console.error(err);
-    toast("حدث خطأ أثناء تنزيل البيانات: " + err.message, true);
+    toast("خطأ: " + err.message, true);
   } finally {
     if (pullBtn) pullBtn.disabled = false;
   }
