@@ -481,7 +481,7 @@
         <div class="pg-head">
           <div class="pg-head-text">
             <div class="pg-title"><span class="accent">المزامنة</span> بين الأجهزة</div>
-            <div class="pg-subtitle">رفع وتنزيل جميع البيانات (المرضى، البرامج، الجلسات) بين الأجهزة عبر GitHub Gist</div>
+            <div class="pg-subtitle">رفع وتنزيل جميع البيانات (المرضى، البرامج، الجلسات) بين اللابتوب والجوال عبر JSONBin.io</div>
           </div>
         </div>
 
@@ -493,14 +493,14 @@
           <div class="card-body">
             <div style="background:#fff9fb;border:1.5px dashed var(--rose);border-radius:12px;padding:14px 16px;font-size:0.82rem;line-height:1.9;color:#555;margin-bottom:16px">
               <b>طريقة الإعداد (مرة واحدة فقط):</b><br/>
-              1. افتحي <a href="https://github.com/settings/tokens" target="_blank" rel="noopener" style="color:var(--mauve-deep);font-weight:700">github.com/settings/tokens</a> وأنشئي Token جديد (classic) بصلاحية <b>gist</b> فقط.<br/>
+              1. افتحي موقع <a href="https://jsonbin.io" target="_blank" rel="noopener" style="color:var(--mauve-deep);font-weight:700">jsonbin.io</a> وأنشئي حساباً مجانياً.<br/>
               2. من لوحة التحكم افتحي <b>API Keys</b> وانسخي مفتاح <b>X-MASTER-KEY</b> والصقيه هنا بالأسفل.<br/>
-              3. الصقي الـ Token في الحقل الأول، والـ Gist ID (آخر جزء من رابط الـ Gist) في الحقل الثاني.<br/>
-              4. اضغطي <b>"رفع البيانات للسحابة"</b>. على الجهاز الآخر أدخلي نفس الـ Token والـ Gist ID ثم <b>"تنزيل"</b>.
+              3. اضغطي زر <b>"رفع البيانات للسحابة"</b> من هذا الجهاز أول مرة — سيتم إنشاء معرف تخزين (Bin ID) تلقائياً.<br/>
+              4. على الجهاز الآخر، أدخلي نفس الـ Master Key ونفس الـ Bin ID، ثم اضغطي <b>"تنزيل البيانات من السحابة"</b>.
             </div>
             <div class="g2">
               <div class="field">
-                <label>GitHub Token</label>
+                <label>JSONBin Master Key</label>
                 <div style="position:relative">
                   <input type="password" id="syncApiKey" placeholder="الصقي مفتاح X-Master-Key هنا..." style="padding-left:40px"/>
                   <button type="button" onclick="toggleSyncKeyVisibility()" title="إظهار/إخفاء" style="position:absolute;left:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--muted)">
@@ -509,8 +509,8 @@
                 </div>
               </div>
               <div class="field">
-                <label>Gist ID</label>
-                <input type="text" id="syncBinId" placeholder="الصقي Gist ID هنا (آخر جزء من رابط الـ Gist)"/>
+                <label>Bin ID (يُنشأ تلقائياً أول مرة)</label>
+                <input type="text" id="syncBinId" placeholder="سيظهر هنا بعد أول عملية رفع..."/>
               </div>
             </div>
             <div style="display:flex;align-items:center;gap:8px;margin-top:6px;font-size:0.8rem;color:var(--muted)">
