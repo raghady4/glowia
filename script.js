@@ -1583,6 +1583,91 @@ async function syncPull() {
     if (pullBtn) pullBtn.disabled = false;
   }
 }
+
+/* ════════════════════════════════════════
+   تصدير واستيراد البيانات محلياً (JSON)
+════════════════════════════════════════ */
+
+// 1. دالة تنزيل البيانات كملف JSON
+function downloadData() {
+  try {
+    const data = {
+      patients,
+      plans,
+      sessions,
+      monthly,
+      exportedAt: new Date().toISOString()
+    };
+    
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
+    const downloadAnchor = document.createElement("a");
+    const fileName = `Glowia_Backup_${new Date().toISOString().slice(0, 10)}.json`;
+
+    downloadAnchor.setAttribute("href", dataStr);
+    downloadAnchor.setAttribute("download", fileName);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+
+    toast("✅ تم تنزيل النسخة الاحتياطية بنجاح");
+  } catch (err) {
+    toast("خطأ أثناء تنزيل البيانات: " + err.message, true);
+  }
+}
+
+// 2. دالة رفع البيانات من ملف JSON
+function uploadData() {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = ".json";
+
+  input.onchange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const data = JSON.parse(event.target.result);
+
+        if (!data || typeof data !== "object") {
+          throw new Error("تنسيق الملف غير صالح");
+        }
+
+        if (confirm("هل أنتِ متأكدة من استيراد البيانات؟ سيعوض هذا البيانات الحالية.")) {
+          if (data.patients) {
+            patients = data.patients;
+            saveAll();
+          }
+          if (data.plans) {
+            plans = data.plans;
+            savePlanStore();
+          }
+          if (data.sessions) {
+            sessions = data.sessions;
+            saveSessions();
+          }
+          if (data.monthly) {
+            monthly = data.monthly;
+            saveMonthly();
+          }
+
+          load();
+          render();
+          toast("✅ تم استيراد البيانات بنجاح");
+        }
+      } catch (err) {
+        toast("فشل قراءة الملف: " + err.message, true);
+      }
+    };
+
+    reader.readAsText(file);
+  };
+
+  input.click();
+}
+
+
 function uid() { return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
 function initials(n) { if(!n)return"؟"; const p=n.trim().split(" "); return p.length>=2?p[0][0]+p[1][0]:p[0][0]||"؟"; }
 function fmtDate(iso)     { if(!iso)return"—"; try{return new Date(iso).toLocaleDateString("ar-SA",{year:"numeric",month:"short",day:"numeric"});}catch{return"—";} }

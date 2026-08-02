@@ -476,61 +476,76 @@
         </div>
       </div>
 
-      <!-- ══ المزامنة ══ -->
-      <div class="page" id="page-sync">
-        <div class="pg-head">
-          <div class="pg-head-text">
-            <div class="pg-title"><span class="accent">المزامنة</span> بين الأجهزة</div>
-            <div class="pg-subtitle">رفع وتنزيل جميع البيانات (المرضى، البرامج، الجلسات) بين الأجهزة عبر GitHub Gist</div>
+<!-- ══ المزامنة والنسخ الاحتياطي ══ -->
+<div class="page" id="page-sync">
+  <div class="pg-head">
+    <div class="pg-head-text">
+      <div class="pg-title"><span class="accent">المزامنة</span> والنسخ الاحتياطي</div>
+      <div class="pg-subtitle">حفظ واسترجاع البيانات عبر السحابة أو كملف JSON محلي على جهازك</div>
+    </div>
+  </div>
+
+  <!-- الخيار 1: المزامنة السحابية -->
+  <div class="card">
+    <div class="card-header">
+      <span class="ch-icon"><i class="fa-solid fa-cloud-arrow-up"></i></span>
+      <h3>المزامنة السحابية (GitHub Gist)</h3>
+    </div>
+    <div class="card-body">
+      <div style="background:#fff9fb;border:1.5px dashed var(--rose);border-radius:12px;padding:14px 16px;font-size:0.82rem;line-height:1.9;color:#555;margin-bottom:16px">
+        <b>طريقة الإعداد:</b> أنشئي Personal Access Token في GitHub بصلاحية <b>gist</b>، ثم الصقيه مع Gist ID للحفاظ على تحديث بياناتك عبر الأجهزة مباشرة.
+      </div>
+      <div class="g2">
+        <div class="field">
+          <label>GitHub Token</label>
+          <div style="position:relative">
+            <input type="password" id="syncApiKey" placeholder="الصقي مفتاح Token هنا..." style="padding-left:40px"/>
+            <button type="button" onclick="toggleSyncKeyVisibility()" title="إظهار/إخفاء" style="position:absolute;left:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--muted)">
+              <i class="fa-solid fa-eye"></i>
+            </button>
           </div>
         </div>
-
-        <div class="card">
-          <div class="card-header">
-            <span class="ch-icon"><i class="fa-solid fa-cloud-arrow-up"></i></span>
-            <h3>إعدادات المزامنة</h3>
-          </div>
-          <div class="card-body">
-            <div style="background:#fff9fb;border:1.5px dashed var(--rose);border-radius:12px;padding:14px 16px;font-size:0.82rem;line-height:1.9;color:#555;margin-bottom:16px">
-              <b>طريقة الإعداد (مرة واحدة فقط):</b><br/>
-              1. افتحي <a href="https://github.com/settings/tokens" target="_blank" rel="noopener" style="color:var(--mauve-deep);font-weight:700">github.com/settings/tokens</a> وأنشئي Token جديد (classic) بصلاحية <b>gist</b> فقط.<br/>
-              2. من لوحة التحكم افتحي <b>API Keys</b> وانسخي مفتاح <b>X-MASTER-KEY</b> والصقيه هنا بالأسفل.<br/>
-              3. الصقي الـ Token في الحقل الأول، والـ Gist ID (آخر جزء من رابط الـ Gist) في الحقل الثاني.<br/>
-              4. اضغطي <b>"رفع البيانات للسحابة"</b>. على الجهاز الآخر أدخلي نفس الـ Token والـ Gist ID ثم <b>"تنزيل"</b>.
-            </div>
-            <div class="g2">
-              <div class="field">
-                <label>GitHub Token</label>
-                <div style="position:relative">
-                  <input type="password" id="syncApiKey" placeholder="الصقي مفتاح X-Master-Key هنا..." style="padding-left:40px"/>
-                  <button type="button" onclick="toggleSyncKeyVisibility()" title="إظهار/إخفاء" style="position:absolute;left:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--muted)">
-                    <i class="fa-solid fa-eye"></i>
-                  </button>
-                </div>
-              </div>
-              <div class="field">
-                <label>Gist ID</label>
-                <input type="text" id="syncBinId" placeholder="الصقي Gist ID هنا (آخر جزء من رابط الـ Gist)"/>
-              </div>
-            </div>
-            <div style="display:flex;align-items:center;gap:8px;margin-top:6px;font-size:0.8rem;color:var(--muted)">
-              <i class="fa-solid fa-clock"></i>
-              آخر مزامنة: <b id="syncLastTime" style="color:#555">لم تتم أي مزامنة بعد</b>
-            </div>
-          </div>
-        </div>
-
-        <div class="form-actions">
-          <button class="btn btn-outline" id="syncPullBtn" onclick="syncPull()">
-            <i class="fa-solid fa-cloud-arrow-down"></i> تنزيل البيانات من السحابة
-          </button>
-          <button class="btn btn-primary" id="syncPushBtn" onclick="syncPush()">
-            <i class="fa-solid fa-cloud-arrow-up"></i> رفع البيانات للسحابة
-          </button>
+        <div class="field">
+          <label>Gist ID</label>
+          <input type="text" id="syncBinId" placeholder="الصقي Gist ID هنا..."/>
         </div>
       </div>
-    </main>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:6px;font-size:0.8rem;color:var(--muted)">
+        <i class="fa-solid fa-clock"></i>
+        آخر مزامنة: <b id="syncLastTime" style="color:#555">لم تتم أي مزامنة بعد</b>
+      </div>
+      <div class="form-actions" style="margin-top:15px">
+        <button class="btn btn-outline" id="syncPullBtn" onclick="syncPull()">
+          <i class="fa-solid fa-cloud-arrow-down"></i> تنزيل من السحابة
+        </button>
+        <button class="btn btn-primary" id="syncPushBtn" onclick="syncPush()">
+          <i class="fa-solid fa-cloud-arrow-up"></i> رفع للسحابة
+        </button>
+      </div>
+    </div>
   </div>
+
+  <!-- الخيار 2: النسخ الاحتياطي المحلي (JSON) -->
+  <div class="card">
+    <div class="card-header">
+      <span class="ch-icon"><i class="fa-solid fa-file-code"></i></span>
+      <h3>النسخ الاحتياطي المحلي (ملف JSON)</h3>
+    </div>
+    <div class="card-body">
+      <p style="font-size:0.85rem;color:#666;margin-bottom:15px;">
+        يمكنكِ تصدير كافة البيانات (المرضى، البرامج، والجلسات) في ملف على جهازكِ، أو استرجاع بيانات سابقة من ملف JSON دون الحاجة للاتصال بالإنترنت.
+      </p>
+      <div class="form-actions" style="justify-content: flex-start;">
+        <button class="btn btn-outline" onclick="downloadData()">
+          <i class="fa-solid fa-download"></i> تصدير ملف JSON
+        </button>
+        <button class="btn btn-primary" onclick="uploadData()">
+          <i class="fa-solid fa-upload"></i> استيراد ملف JSON
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 
   <!-- ══ MOBILE NAV ══ -->
   <nav class="mobile-nav" id="mobileNav">
