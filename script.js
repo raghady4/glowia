@@ -1386,112 +1386,29 @@ async function syncPush() {
   finally{if(btn){btn.disabled=false;btn.innerHTML=oh;}}
 }
 
-async function syncPull() { const apiKey = document.getElementById("syncApiKey")?.value.trim(); const binId = document.getElementById("syncBinId")?.value.trim();
-if (!apiKey || !binId) { toast("يرجى إدخال Master Key و Bin ID", true); return; }
-if (!confirm("سيتم استبدال جميع البيانات الحالية. هل تريدين المتابعة؟")) { return; }
-const btn = document.getElementById("syncPullBtn"); const oldHtml = btn?.innerHTML;
-if (btn) { btn.disabled = true; btn.innerHTML = "جارِ التنزيل..."; }
-try { // 1. الاتصال بـ JSONBin const url = https://api.jsonbin.io/v3/b/${encodeURIComponent(binId)}/latest;
-const res = await fetch(url, {
-  method: "GET",
-  headers: {
-    "X-Master-Key": apiKey,
-    "Accept": "application/json"
-  },
-  cache: "no-store"
-});
-
-// نقرأ النص أولاً حتى نتمكن من عرض رسالة الخطأ
-const responseText = await res.text();
-
-console.log("JSONBin download HTTP status:", res.status);
-
-if (!res.ok) {
-  console.error("JSONBin response:", responseText);
-  throw new Error(
-    `HTTP ${res.status}: ${responseText.slice(0, 300)}`
-  );
+async function syncPull() {
+  const apiKey=document.getElementById("syncApiKey")?.value.trim();
+  const binId =document.getElementById("syncBinId")?.value.trim();
+  if(!apiKey||!binId){toast("يرجى إدخال Master Key و Bin ID",true);return;}
+  if(!confirm("سيتم استبدال جميع البيانات الحالية. هل تريدين المتابعة؟"))return;
+  const btn=document.getElementById("syncPullBtn"); const oh=btn?.innerHTML;
+  if(btn){btn.disabled=true;btn.innerHTML="جارِ التنزيل...";}
+  try{
+    const res=await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`,{headers:{"X-Master-Key":apiKey}});
+    if(!res.ok)throw new Error("HTTP "+res.status);
+    const data=await res.json(); const r=data.record||{};
+    patients=Array.isArray(r.patients)?r.patients:[];
+    plans=r.plans&&typeof r.plans==="object"?r.plans:{};
+    sessions=Array.isArray(r.sessions)?r.sessions:[];
+    monthly=r.monthly&&typeof r.monthly==="object"?r.monthly:{};
+    saveAll();savePlanStore();saveSessions();saveMonthly();
+    const cfg={apiKey,binId,lastSync:new Date().toISOString()};
+    saveSyncCfg(cfg); setText2("syncLastTime",fmtDateTime(cfg.lastSync));
+    render();renderSessionsTable();populateSessionPatientList();
+    toast("✅ تم تنزيل البيانات بنجاح");
+  }catch{toast("تعذّر التنزيل، تحقّقي من Master Key و Bin ID",true);}
+  finally{if(btn){btn.disabled=false;btn.innerHTML=oh;}}
 }
-
-// 2. تحليل الاستجابة
-let result;
-
-try {
-  result = JSON.parse(responseText);
-} catch {
-  throw new Error("استجابة JSONBin ليست JSON صالحاً");
-}
-
-const r = result?.record;
-
-if (!r || typeof r !== "object" || Array.isArray(r)) {
-  throw new Error("لم يتم العثور على سجل البيانات داخل الاستجابة");
-}
-
-// 3. التأكد من وجود حقول البيانات قبل استبدال البيانات المحلية
-const requiredKeys = [
-  "patients", "plans", "sessions", "monthly"
-];
-
-const missingKeys = requiredKeys.filter(
-  key => !Object.prototype.hasOwnProperty.call(r, key)
-);
-
-if (missingKeys.length) {
-  throw new Error(
-    "حقول ناقصة في السحابة: " + missingKeys.join(", ")
-  );
-}
-
-if (
-  !Array.isArray(r.patients) ||
-  !Array.isArray(r.sessions) ||
-  !r.plans ||
-  typeof r.plans !== "object" ||
-  Array.isArray(r.plans) ||
-  !r.monthly ||
-  typeof r.monthly !== "object" ||
-  Array.isArray(r.monthly)
-) {
-  throw new Error("بنية البيانات الموجودة في السحابة غير صحيحة");
-}
-
-// 4. استعادة البيانات
-patients = r.patients;
-plans = r.plans;
-sessions = r.sessions;
-monthly = r.monthly;
-
-saveAll();
-savePlanStore();
-saveSessions();
-saveMonthly();
-
-const cfg = {
-  apiKey,
-  binId,
-  lastSync: new Date().toISOString()
-};
-
-saveSyncCfg(cfg);
-setText2("syncLastTime", fmtDateTime(cfg.lastSync));
-
-render();
-renderSessionsTable();
-populateSessionPatientList();
-
-toast("✅ تم تنزيل البيانات بنجاح");
-} catch (error) { console.error("syncPull failed:", error);
-toast(
-  "فشل التنزيل: " + (error?.message || "خطأ غير معروف"),
-  true
-);
-} finally { if (btn) { btn.disabled = false; btn.innerHTML = oldHtml; } } }
-
-
-
-
-
 
 function uid() { return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
 function initials(n) { if(!n)return"؟"; const p=n.trim().split(" "); return p.length>=2?p[0][0]+p[1][0]:p[0][0]||"؟"; }
