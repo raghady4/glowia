@@ -1534,9 +1534,17 @@ async function syncPush() {
 }
 
 async function syncPull() {
-  const cfg = loadSyncCfg();
-  if (!cfg.apiKey || !cfg.gistId) {
-    toast("يرجى إدخال GitHub Token و Gist ID أولاً", true);
+  // 1. قراءة القيم مباشرة من الحقول في واجهة المستخدم أولاً، وإذا كانت فارغة نقرأ من التخزين
+  const inputKey = document.getElementById("syncApiKey")?.value.trim() || "";
+  const inputBin = document.getElementById("syncBinId")?.value.trim() || "";
+  
+  const savedCfg = loadSyncCfg();
+  
+  const apiKey = inputKey || savedCfg.apiKey;
+  const gistId = inputBin || savedCfg.gistId;
+
+  if (!apiKey || !gistId) {
+    toast("يرجى التأكد من إدخال GitHub Token و Gist ID", true);
     return;
   }
 
@@ -1544,8 +1552,8 @@ async function syncPull() {
   if (pullBtn) pullBtn.disabled = true;
 
   try {
-    const res = await fetch(`https://api.github.com/gists/${cfg.gistId}`, {
-      headers: {"Authorization":`token ${cfg.apiKey}`,"Accept":"application/vnd.github.v3+json"}
+    const res = await fetch(`https://api.github.com/gists/${gistId}`, {
+      headers: {"Authorization": `token ${apiKey}`, "Accept": "application/vnd.github.v3+json"}
     });
     if (!res.ok) throw new Error("فشل الاتصال — تأكدي من الـ Token والـ Gist ID");
 
@@ -1554,15 +1562,7 @@ async function syncPull() {
     if (!raw) throw new Error("الملف غير موجود في الـ Gist");
     const data = JSON.parse(raw);
 
-    const cloudTime    = data.savedAt ? new Date(data.savedAt).getTime() : 0;
-    const lastPushTime = cfg.lastSync  ? new Date(cfg.lastSync).getTime()  : 0;
-
-    if (lastPushTime && cloudTime && cloudTime < lastPushTime) {
-      toast("⚠️ البيانات المحلية أحدث — ارفع أولاً إذا أردت المزامنة.", true);
-      if (pullBtn) pullBtn.disabled = false;
-      return;
-    }
-
+    // تحديث البيانات المحلية
     if (data.patients) localStorage.setItem(SK,  JSON.stringify(data.patients));
     if (data.plans)    localStorage.setItem(SPK, JSON.stringify(data.plans));
     if (data.sessions) localStorage.setItem(SSK, JSON.stringify(data.sessions));
@@ -1571,11 +1571,14 @@ async function syncPull() {
     load();
     render();
 
+    // حفظ الإعدادات المحدثة رسمياً
     const now = new Date().toISOString();
-    cfg.lastSync = now;
-    localStorage.setItem(SYK, JSON.stringify(cfg));
+    const cfg = { apiKey, gistId, lastSync: now };
+    saveSyncCfg(cfg);
+    
     const el = document.getElementById("syncLastTime");
     if (el) el.textContent = fmtDateTime(now);
+    
     toast("✅ تم تنزيل البيانات بنجاح");
   } catch (err) {
     toast("خطأ: " + err.message, true);
@@ -1583,7 +1586,6 @@ async function syncPull() {
     if (pullBtn) pullBtn.disabled = false;
   }
 }
-
 /* ════════════════════════════════════════
    تصدير واستيراد البيانات محلياً (JSON)
 ════════════════════════════════════════ */
